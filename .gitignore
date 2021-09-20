@@ -35,3 +35,7 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+
+#Firebase package
+Assets/Firebase
+Assets/StreamingAssets
