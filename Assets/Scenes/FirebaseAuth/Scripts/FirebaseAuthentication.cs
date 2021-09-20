@@ -13,23 +13,10 @@ public class FirebaseAuthentication : MonoBehaviour
     public FirebaseUser User;
 
     [Header("Login")]
-    private GameObject emailLoginGameObject;
-    private GameObject passwordLoginGameObject;
     public InputField emailLoginField;
     public InputField passwordLoginField;
     public Text warningLoginText;
     public Text confirmLoginText;
-
-    private void Start()
-    {
-        //emailLoginGameObject = GameObject.Find("E-mail InputField");
-        //passwordLoginGameObject = GameObject.Find("Password InputField");
-        //emailLoginField.text = emailLoginGameObject.GetComponent<Text>().text;
-        //passwordLoginField.text = passwordLoginGameObject.GetComponent<Text>().text;
-        //warningLoginText = GameObject.Find("warning Login Text");
-        //confirmLoginText = GameObject.Find("confirm Login Text").GetComponent<Text>();
-
-    }
     private void Awake()
     {
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(
