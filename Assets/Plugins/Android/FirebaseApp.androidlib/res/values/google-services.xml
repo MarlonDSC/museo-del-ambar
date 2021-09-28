@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@string/firebase_database_url,@string/gcm_defaultSenderId,@string/google_storage_bucket,@string/project_id,@string/google_api_key,@string/google_crash_reporting_api_key,@string/google_app_id,@string/default_android_client_id,@string/default_web_client_id">
+  <string name="firebase_database_url" translatable="false">https://museodelambarrd-default-rtdb.firebaseio.com</string>
+  <string name="gcm_defaultSenderId" translatable="false">62683424096</string>
+  <string name="google_storage_bucket" translatable="false">museodelambarrd.appspot.com</string>
+  <string name="project_id" translatable="false">museodelambarrd</string>
+  <string name="google_api_key" translatable="false">AIzaSyA-urQBIj8E6U5vfrEQcMJpl7uo8kG98I8</string>
+  <string name="google_crash_reporting_api_key" translatable="false">AIzaSyA-urQBIj8E6U5vfrEQcMJpl7uo8kG98I8</string>
+  <string name="google_app_id" translatable="false">1:62683424096:android:b1c14f33c015c97f8bea05</string>
+  <string name="default_android_client_id" translatable="false">62683424096-j4rq5v9ceh0bno2uvdksvm5o9591a8q8.apps.googleusercontent.com</string>
+  <string name="default_web_client_id" translatable="false">62683424096-fj9pc3k43hk3met5in22er6lqp077hat.apps.googleusercontent.com</string>
+</resources>
