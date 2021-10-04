@@ -4,10 +4,6 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-<<<<<<< Updated upstream
-  m_Scenes: []
-  m_configObjects: {}
-=======
   m_Scenes:
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
@@ -25,4 +21,3 @@ EditorBuildSettings:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: e0c89f0c3cd54d14ebdb728663a5e7b5, type: 2}
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: aed9133a8ea8b8c44a18976800bd2f3e, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: b7562283cf7b0344b8af162bbe5dca23, type: 2}
->>>>>>> Stashed changes

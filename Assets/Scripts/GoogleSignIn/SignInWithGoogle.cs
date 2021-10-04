@@ -13,30 +13,18 @@ public class SignInWithGoogle : MonoBehaviour
 	FirebaseAuth auth;
 	public static FirebaseUser NewUser;
 	public static string Userdocument { get; set; }
-	//public Text statusText;
 	bool logsEnabled = true;
-	//public GameObject nextPanel;
-	//public Image profilePicture;
-	//public GameObject FormPanel;
-	// Start is called before the first frame update
+	
 	void Start()
 	{
 		//Keep logging to false in production
-		LCGoogleLoginBridge.ChangeLoggingLevel(true);
-
-		//For Android, You need to replace it with web client ID. Check details given in LCGoogleLoginBridge file or ReadMe file or tutorial video
-		//For iOS, web client id will be used if you are using server auth. Normal iOS client id is picked up from Google-Services plist file. Its safe to pass null here for iOS if no server auth is used otherwise its ignored by the sdk
-
-#warning Google Login: Pass web client ID + iOS Client ID here and remove this warning to tryout example scene
 		LCGoogleLoginBridge.InitWithClientID("62683424096-g4i4da95v1845js0rp4u7lj3rr2hj5bb.apps.googleusercontent.com",
 			"<IOSClientIdData>.apps.googleusercontent.com");
 		Debug.Log("Firebase init");
 		//enable Login
 		LCGoogleLoginBridge.ChangeLoggingLevel(true);
 		auth = FirebaseAuth.DefaultInstance;
-
-		ChangeLogging(true);
-		SignInNormal();
+		//SignInNormal();
 	}
 
 	public void SignInNormal()
@@ -57,12 +45,6 @@ public class SignInWithGoogle : MonoBehaviour
 		LCGoogleLoginBridge.LoginUser(logInCallBack, false);
 	}
 
-	public void ChangeLogging(bool enable)
-	{
-		logsEnabled = enable;
-		LCGoogleLoginBridge.ChangeLoggingLevel(enable);
-		PrintMessage("ChangeLogging: " + enable);
-	}
 	public void UserID()
 	{
 		//GameObject FormPanel = GameObject.Find("FormPanel");
@@ -86,13 +68,7 @@ public class SignInWithGoogle : MonoBehaviour
 			Debug.LogFormat("User signed in successfully: {0} ({1})",
 				NewUser.DisplayName, NewUser.UserId);
 			Userdocument = NewUser.UserId;
-			Task createUser = CreateInstanceOnFirestore(NewUser);
-			//LoginPanel.SetActive(false);
-			//nextPanel.SetActive(true);
-			//FormPanel.SetActiveRecursively(true);
-            //SetActiveRecursivelyExt(FormPanel, true);
-            //StartCoroutine(DownloadImage(NewUser.PhotoUrl.ToString()));
-
+			Task createUser = CreateInstanceOnFirestore();
 		});
 
 		//"UserID: " + LCGoogleLoginBridge.GSIUserID()
@@ -107,18 +83,18 @@ public class SignInWithGoogle : MonoBehaviour
         }
     }
 
-    private static async Task CreateInstanceOnFirestore(FirebaseUser newUser)
+	public static async Task CreateInstanceOnFirestore()
     {
 		FirebaseFirestore database = FirebaseFirestore.DefaultInstance;
-		DocumentReference userReference = database.Collection("users").Document(newUser.UserId);
-		string[] fullName = newUser.DisplayName.Split(' ');
+	    DocumentReference userReference = database.Collection("users").Document(NewUser.UserId);
+		string[] fullName = NewUser.DisplayName.Split(' ');
 		User user = new User
         {
 			country = "",
-			email = newUser.Email,
+			email = NewUser.Email,
 			firstName = fullName[0],
 			lastName = fullName[1],
-			phoneNumber = newUser.PhoneNumber,
+			phoneNumber = NewUser.PhoneNumber,
 		};
 
 		await userReference.SetAsync(user);
@@ -132,11 +108,13 @@ public class SignInWithGoogle : MonoBehaviour
 		}
 		//statusText.text = message;
 	}
+	
 	IEnumerator DownloadImage(string MediaUrl)
 	{
 		UnityWebRequest request = UnityWebRequestTexture.GetTexture(MediaUrl);
 		yield return request.SendWebRequest();
-		if (request.isNetworkError || request.isHttpError)
+		
+		if (request.result == UnityWebRequest.Result.ConnectionError)
 			Debug.Log(request.error);
 		else
 		{
