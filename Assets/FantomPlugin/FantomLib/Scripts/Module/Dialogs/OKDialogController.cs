@@ -26,11 +26,19 @@ namespace FantomLib
     {
         //Inspector Settings
         public string title = "Title";                  //Dialog title
-        [Multiline] public string message = "Message";  //Dialog message
+	    [Multiline] public string message = "Message";  //Dialog message
         public string okButton = "OK";                  //Text of 'OK' button.
-        public string resultValue = "ok";               //Callback value when 'OK' pressed.
+	    public string resultValue = "ok";				//Callback value when 'OK' pressed.
+	    public string style = "android:Theme.DeviceDefault.Light.Dialog.Alert"; //Dialog theme
+	    
+	    public static string messageDialog;
+	    public static string titleDialog;
+	    public static string okButtonDialog;
+	    public static string styleDialog = "android:Theme.DeviceDefault.Dark.Dialog.Alert";
+	    public static string resultValueDialog = "ok";
+	    public static string nameDialog;
 
-        public string style = "android:Theme.DeviceDefault.Light.Dialog.Alert"; //Dialog theme
+
 
         //Localize resource ID data
         [Serializable]
@@ -80,8 +88,9 @@ namespace FantomLib
         }
 
         private void Start()
-        {
-            
+	    {
+		    nameDialog = gameObject.name;
+	        message = messageDialog;
         }
 
         // Update is called once per frame
@@ -89,7 +98,18 @@ namespace FantomLib
         //{
 
         //}
-
+	    public static void ShowDialog(){
+	    	#if UNITY_EDITOR
+		    Debug.Log("OKDialogController.Show called");
+#elif UNITY_ANDROID
+		    AndroidPlugin.ShowDialog(
+		    titleDialog,
+		    messageDialog,
+		    nameDialog, "ReceiveResult",
+		    okButtonDialog, resultValueDialog,
+		    styleDialog);
+#endif
+	    }
         
         //Show dialog
         public void Show()

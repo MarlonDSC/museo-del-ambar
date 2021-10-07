@@ -17,6 +17,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/FantomPlugin/Demo/Scenes/DialogTest.unity
     guid: cab1883a5a58f8c4abfcd058fa812abf
+  - enabled: 0
+    path: Assets/FantomPlugin/Demo/Scenes/PreviousVersion/CordingSample/DialogTest
+      1.1.unity
+    guid: 0040213a96d41984fbd495d511bfa0ff
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: e0c89f0c3cd54d14ebdb728663a5e7b5, type: 2}
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: aed9133a8ea8b8c44a18976800bd2f3e, type: 2}

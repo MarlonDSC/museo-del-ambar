@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using Firebase.Firestore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FantomLib;
 
 public class SignInWithGoogle : MonoBehaviour
 {
@@ -14,15 +15,18 @@ public class SignInWithGoogle : MonoBehaviour
 	public static FirebaseUser NewUser;
 	public static string Userdocument { get; set; }
 	bool logsEnabled = true;
+	public GameObject nextPanel;
 	
 	void Start()
 	{
+		//enable Login
+		LCGoogleLoginBridge.ChangeLoggingLevel(true);
 		//Keep logging to false in production
+		//62683424096-fj9pc3k43hk3met5in22er6lqp077hat.apps.googleusercontent.com
+		//62683424096-g4i4da95v1845js0rp4u7lj3rr2hj5bb.apps.googleusercontent.com
 		LCGoogleLoginBridge.InitWithClientID("62683424096-g4i4da95v1845js0rp4u7lj3rr2hj5bb.apps.googleusercontent.com",
 			"<IOSClientIdData>.apps.googleusercontent.com");
 		Debug.Log("Firebase init");
-		//enable Login
-		LCGoogleLoginBridge.ChangeLoggingLevel(true);
 		auth = FirebaseAuth.DefaultInstance;
 		//SignInNormal();
 	}
@@ -34,11 +38,16 @@ public class SignInWithGoogle : MonoBehaviour
 			if (loggedIn)
 			{
 				PrintMessage("Google Login Success> " + LCGoogleLoginBridge.GSIUserName());
+				UserID();
+				StartCoroutine(LoadPanel());
 			}
 
 			else
 			{
 				PrintMessage("Google Login Failed");
+				 OKDialogController.titleDialog = "Error al iniciar sesión";
+				 OKDialogController.messageDialog = "Inténtelo de nuevo o más tarde";
+				 OKDialogController.ShowDialog();
 			}
 		};
 
@@ -48,27 +57,34 @@ public class SignInWithGoogle : MonoBehaviour
 	public void UserID()
 	{
 		//GameObject FormPanel = GameObject.Find("FormPanel");
-		GameObject LoginPanel = GameObject.Find("Panel de cuentas para iniciar sesion ");
 		Credential credential =
 		GoogleAuthProvider.GetCredential(LCGoogleLoginBridge.GSIIDUserToken(), LCGoogleLoginBridge.GSIServerAuthCode());
 		auth.SignInWithCredentialAsync(credential).ContinueWith(task => {
 			if (task.IsCanceled)
 			{
+				//OKDialogController.titleDialog = "Error al iniciar sesión";
+				//OKDialogController.messageDialog = "La sesión fue cancelada, inténtelo de nuevo o más tarde";
+				//OKDialogController.ShowDialog();
 				Debug.LogError("SignInWithCredentialAsync was canceled.");
 				return;
 			}
 			if (task.IsFaulted)
 			{
+				//OKDialogController.titleDialog = "Error al iniciar sesión";
+				//OKDialogController.messageDialog = "Inténtelo de nuevo o más tarde";
+				//OKDialogController.ShowDialog();
 				Debug.LogError("SignInWithCredentialAsync encountered an error: " + task.Exception);
 				return;
 			}
-
-			NewUser = task.Result;
-			PrintMessage("DisplayName: " + NewUser.DisplayName + "\n" + "UID: " +  NewUser.UserId + "\n" + "PhotoURL: " + NewUser.PhotoUrl);
-			Debug.LogFormat("User signed in successfully: {0} ({1})",
-				NewUser.DisplayName, NewUser.UserId);
-			Userdocument = NewUser.UserId;
-			Task createUser = CreateInstanceOnFirestore();
+			if(task.IsCompleted){
+				NewUser = task.Result;
+				PrintMessage("DisplayName: " + NewUser.DisplayName + "\n" + "UID: " +  NewUser.UserId + "\n" + "PhotoURL: " + NewUser.PhotoUrl);
+				Debug.LogFormat("User signed in successfully: {0} ({1})",
+					NewUser.DisplayName, NewUser.UserId);
+				Userdocument = NewUser.UserId;
+				Task createUser = CreateInstanceOnFirestore();
+				return;
+			}
 		});
 
 		//"UserID: " + LCGoogleLoginBridge.GSIUserID()
@@ -127,6 +143,11 @@ public class SignInWithGoogle : MonoBehaviour
 	Sprite SpriteFromTexture2D(Texture2D texture)
 	{
 		return Sprite.Create(texture, new Rect(0.0f, 0.0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100.0f);
+	}
+	
+	IEnumerator LoadPanel(){
+		yield return new WaitForSeconds(1);
+		nextPanel.SetActive(true);
 	}
 
 }

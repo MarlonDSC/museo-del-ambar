@@ -1,3 +1,11 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:d227b7af84fb3e2873c2d2f04f460298519c6f69ac35b785b5cfb36b44a539bd
-size 304
+fileFormatVersion: 2
+guid: 64be065e65fd4cc089adeee4c67f0025
+labels:
+- gvh
+- gvh_version-8.2.0
+- gvhp_exportpath-Firebase/m2repository/com/google/firebase/firebase-auth-unity/8.2.0/firebase-auth-unity-8.2.0.pom
+timeCreated: 1480838400
+DefaultImporter:
+  userData:
+  assetBundleName:
+  assetBundleVariant:

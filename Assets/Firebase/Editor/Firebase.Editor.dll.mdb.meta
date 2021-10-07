@@ -1,3 +1,13 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:f61181ce0bbcb96333264b603a608c694f8452620a28e54cb00a619cd3d1ab5f
-size 292
+fileFormatVersion: 2
+guid: 7f7b9cecf58b463599316e650bec7cb6
+labels:
+- gvh
+- gvh_rename_to_disable
+- gvh_targets-editor
+- gvh_version-8.2.0
+- gvhp_exportpath-Firebase/Editor/Firebase.Editor.dll.mdb
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

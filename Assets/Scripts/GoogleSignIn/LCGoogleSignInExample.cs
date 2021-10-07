@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Firebase.Auth;
+using FantomLib;
 
 public class LCGoogleSignInExample : MonoBehaviour {
 	public Text statusText;

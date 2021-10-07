@@ -1,3 +1,10 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:f6db92b21712b458f39e75d87751e44662351ad79b4d55dd2c811016f941e38e
-size 246
+<metadata>
+  <groupId>com.google.firebase</groupId>
+  <artifactId>firebase-firestore-unity</artifactId>
+  <versioning>
+    <release>8.2.0</release>
+    <versions><version>8.2.0</version></versions>
+    <lastUpdated/>
+  </versioning>
+</metadata>
+
