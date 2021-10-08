@@ -3,16 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class TurnOffPanelAfterAnimation : MonoBehaviour
-{
-	public AnimationClip animationClip;
-	public Animator animator;
-	public GameObject panel;
- 
+{	
+	public Animation anim;
+
 	public void SetTrigger()
 	{
-		//StartCoroutine(PerformAnimRoutine());
-		//Solo tomare una foto
-		//tt
+		StartCoroutine(PerformAnimRoutine());
+	}
+
+	private IEnumerator PerformAnimRoutine()
+	{
+		var state = anim.PlayQueued("Fade_In", QueueMode.PlayNow, PlayMode.StopSameLayer);
+
+		yield return new WaitForSeconds(state.length);
+
+		gameObject.SetActive(false);
 	}
  
 	//private IEnumerator PerformAnimRoutine()
