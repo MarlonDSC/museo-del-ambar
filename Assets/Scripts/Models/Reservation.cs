@@ -11,22 +11,39 @@ public class Reservation : MonoBehaviour
 	public int adults {get; set;}
 	
 	[FirestoreProperty]
+	public string amount {get; set;}
+	
+	[FirestoreProperty]
+	public string reservationType {get; set;}
+	
+	[FirestoreProperty]
 	public int assistance {get; set;}
 	
 	[FirestoreProperty]
 	public int children {get; set;}
 	
 	[FirestoreProperty]
-	public DateTime orderDate {get; set;}
+	public string description {get; set;}
 	
 	[FirestoreProperty]
-	public Dictionary<string, object> payment {get; set;}
-	//public Dictionary<string, object> payment = new Dictionary<string, object>{
-	//	{},
-	//};
+	public DateTime orderDate {get; set;}
+	
+	//[FirestoreProperty]
+	//public Dictionary<Payment, object> payment {get; set;}
+	
+	[FirestoreProperty]
+	public string paymentMethod {get; set;}
+	
 	[FirestoreProperty]
 	public DateTime reservationDate {get; set;}
 	
+	//[FirestoreProperty]
+	//public Payment payment {get; set;}
+	
+	[FirestoreProperty]
 	public string user {get; set;}
+	
+	[FirestoreProperty]
+	public string reservationId {get; set;}
 	
 }

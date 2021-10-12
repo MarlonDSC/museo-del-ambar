@@ -16,7 +16,10 @@ public class User
     public string firstName { get; set; }
 
     [FirestoreProperty]
-    public string phoneNumber { get; set; }
+	public string phoneNumber { get; set; }
+    
+    [FirestoreProperty]
+	public string user { get; set; }
 
     /*Phone numbers cannot be integers because phone numbers can exceed the limit of numerical variables like: int or even long
      * you can follow up more here:

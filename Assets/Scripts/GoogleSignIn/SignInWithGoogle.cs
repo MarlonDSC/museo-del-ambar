@@ -101,19 +101,25 @@ public class SignInWithGoogle : MonoBehaviour
 
 	public static async Task CreateInstanceOnFirestore()
     {
-		FirebaseFirestore database = FirebaseFirestore.DefaultInstance;
-	    DocumentReference userReference = database.Collection("users").Document(NewUser.UserId);
+	    FirebaseFirestore database = FirebaseFirestore.DefaultInstance;
 		string[] fullName = NewUser.DisplayName.Split(' ');
-		User user = new User
-        {
-			country = "",
-			email = NewUser.Email,
-			firstName = fullName[0],
-			lastName = fullName[1],
-			phoneNumber = NewUser.PhoneNumber,
-		};
-
-		await userReference.SetAsync(user);
+	    
+	    DocumentReference docRef = database.Collection("users").Document(NewUser.UserId);
+	    DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
+	    if (!snapshot.Exists)
+	    {
+		    User user = new User
+		    {
+		    	country = "",
+		    	email = NewUser.Email,
+		    	firstName = fullName[0],
+		    	lastName = fullName[1],
+		    	phoneNumber = NewUser.PhoneNumber,
+		    	user = NewUser.UserId,
+		    };
+		    
+		    await docRef.SetAsync(user);
+	    }
     }
 
     void PrintMessage(string message)
@@ -122,7 +128,6 @@ public class SignInWithGoogle : MonoBehaviour
 		{
 			Debug.Log(message);
 		}
-		//statusText.text = message;
 	}
 	
 	IEnumerator DownloadImage(string MediaUrl)
@@ -146,8 +151,7 @@ public class SignInWithGoogle : MonoBehaviour
 	}
 	
 	IEnumerator LoadPanel(){
-		yield return new WaitForSeconds(1);
+		yield return new WaitForSeconds(0.1f);
 		nextPanel.SetActive(true);
 	}
-
 }
