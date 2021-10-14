@@ -22,7 +22,8 @@ namespace FantomLib
         public string defaultTime = "";                 //When it is empty, it is the current time.
         public string resultTimeFormat = "hh:mm aa";        //Java Datetime format.
 
-        public string style = "android:Theme.DeviceDefault.Light.Dialog.Alert"; //Dialog theme
+	    string style = "@style/DialogTheme";
+        //public string style = "android:Theme.DeviceDefault.Light.Dialog.Alert"; //Dialog theme
         public static string timeValue;
         public TextMeshProUGUI time;
 

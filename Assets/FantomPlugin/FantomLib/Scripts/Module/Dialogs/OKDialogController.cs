@@ -29,12 +29,13 @@ namespace FantomLib
 	    [Multiline] public string message = "Message";  //Dialog message
         public string okButton = "OK";                  //Text of 'OK' button.
 	    public string resultValue = "ok";				//Callback value when 'OK' pressed.
+	    //public string style = "android:Theme.DeviceDefault.Light.Dialog.Alert"; //Dialog theme
 	    public string style = "android:Theme.DeviceDefault.Light.Dialog.Alert"; //Dialog theme
 	    
 	    public static string messageDialog;
 	    public static string titleDialog;
 	    public static string okButtonDialog;
-	    public static string styleDialog = "android:Theme.DeviceDefault.Dark.Dialog.Alert";
+	    static string styleDialog = "@style/DialogTheme";
 	    public static string resultValueDialog = "ok";
 	    public static string nameDialog;
 

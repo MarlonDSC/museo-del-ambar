@@ -26,14 +26,14 @@ namespace FantomLib
 	    public TextMeshProUGUI day;
         public static DateTime dateValue;
 
-
-
-        public string style = "android:Theme.DeviceDefault.Light.Dialog.Alert"; //Dialog theme
+	    string style = "@style/DialogTheme"; //Dialog dark theme
+	    //string style = "@style/MyDatePickerDialogTheme"; //Dialog dark theme 
+	    //string style = "android:Theme.Material.Dialog"; //Dialog dark theme 
+        //public string style = "android:Theme.DeviceDefault.Light.Dialog.Alert"; //Dialog theme
 
         //Callbacks
         [Serializable] public class ResultHandler : UnityEvent<string> { }      //date string
         public ResultHandler OnResult;
-
 
         // Use this for initialization
         private void Start()
