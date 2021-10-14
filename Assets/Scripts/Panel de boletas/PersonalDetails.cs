@@ -15,6 +15,8 @@ public class PersonalDetails : MonoBehaviour
 	public TMP_InputField countryOrRegionInputField;
 	public TMP_InputField emailInputField;
 	public TMP_InputField phoneNumberinputField;
+	public GameObject button;
+	public Toggle toggle;
 
 	public void Start()
 	{
@@ -59,5 +61,17 @@ public class PersonalDetails : MonoBehaviour
 			{"phoneNumber", phoneNumberinputField.text},
 		};
 		await docRef.UpdateAsync(user);
+	}
+	
+	public void AcceptTermsAndServices(){
+		if(toggle.isOn){
+			button.SetActive(true);
+			Debug.Log("activo");
+		}
+		else if(!toggle.isOn) {
+			button.SetActive(false);
+			Debug.Log("inactivo");
+		}
+		//toggle.isOn = true ? button.SetActive(true) : button.SetActive(false);
 	}
 }

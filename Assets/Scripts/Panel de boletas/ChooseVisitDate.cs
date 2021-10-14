@@ -18,6 +18,9 @@ public class ChooseVisitDate : MonoBehaviour
 	public GameObject children;
 	public GameObject assistance;
 	double servicePrice = 0.0;
+	public TextMeshProUGUI text;
+	public TextMeshProUGUI text1;
+	public TextMeshProUGUI text2;
 	
 	// Start is called on the frame when a script is enabled just before any of the Update methods is called the first time.
 	void Start()
@@ -38,6 +41,9 @@ public class ChooseVisitDate : MonoBehaviour
 		string setDateToFirestore = FantomLib.DatePickerController.dateValue.ToString("yyyy/MM/dd");
 		string setTimeToFirestore = FantomLib.TimePickerController.timeValue;
 		DateTime saveDate = DateTime.Parse(setDateToFirestore + " " + setTimeToFirestore);
+		text.text = saveDate.ToString();
+		text1.text = setDateToFirestore;
+		text2.text = setTimeToFirestore;
 		string getDate = DateTime.Now.ToString("MM-dd-yyyy");
 		double price = Convert.ToDouble((int.Parse(adults.GetComponent<TextMeshProUGUI>().text) + int.Parse(children.GetComponent<TextMeshProUGUI>().text)))*servicePrice;
 		
@@ -53,7 +59,7 @@ public class ChooseVisitDate : MonoBehaviour
 			//{"payment.amount", 5.00},
 			//{"payment.description", "lol"},
 			//{"payment.paymentMethod", ""},
-			{"amount", price.ToString("N2")},
+			{"amount", price.ToString("#.##")},
 			//
 			{"description", "Compra de " + (int.Parse(adults.GetComponent<TextMeshProUGUI>().text) + int.Parse(children.GetComponent<TextMeshProUGUI>().text)).ToString() + " boletos Museo del Ambar"},
 			{"paymentMethod", ""},
