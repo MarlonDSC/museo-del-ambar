@@ -8,6 +8,7 @@ using Firebase.Firestore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FantomLib;
+using UnityEngine.SceneManagement;
 
 public class SignInWithGoogle : MonoBehaviour
 {
@@ -39,7 +40,8 @@ public class SignInWithGoogle : MonoBehaviour
 			{
 				PrintMessage("Google Login Success> " + LCGoogleLoginBridge.GSIUserName());
 				UserID();
-				StartCoroutine(LoadPanel());
+				//StartCoroutine(LoadPanel());
+				SceneManager.LoadScene("SeleccionDeServicio");
 			}
 
 			else
