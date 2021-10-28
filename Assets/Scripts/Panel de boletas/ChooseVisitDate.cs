@@ -47,8 +47,8 @@ public class ChooseVisitDate : MonoBehaviour
 		string getDate = DateTime.Now.ToString("MM-dd-yyyy");
 		double price = Convert.ToDouble((int.Parse(adults.GetComponent<TextMeshProUGUI>().text) + int.Parse(children.GetComponent<TextMeshProUGUI>().text)))*servicePrice;
 		
-		DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser.UserId + "-" + getDate);
-		//DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93" + "-" + getDate);
+		//DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser.UserId + "-" + getDate);
+		DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93-10-27-2021");
 		Dictionary<string, object> reservation = new Dictionary<string, object>
 		{
 			{"adults", int.Parse(adults.GetComponent<TextMeshProUGUI>().text)},
@@ -72,7 +72,7 @@ public class ChooseVisitDate : MonoBehaviour
 		string getDate = DateTime.Now.ToString("MM-dd-yyyy");
 		string reservationType = "";
 		
-		DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser.UserId + "-" + getDate);
+		DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93-10-27-2021");
 		//DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93" + "-" + getDate);
 		DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
 		if (snapshot.Exists)

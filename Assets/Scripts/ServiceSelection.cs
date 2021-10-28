@@ -16,6 +16,7 @@ public class ServiceSelection : MonoBehaviour
 	Toggle toggle;
 	string reservationType;
 	public static string getDate;
+	string reservationTypeName;
 
     void Start()
 	{
@@ -28,12 +29,17 @@ public class ServiceSelection : MonoBehaviour
 		if(toggle.isOn){
 			number = int.Parse(name.Replace("Opción ", ""));
 			selector = GameObject.Find("Seleccionador " + name.Replace("Opción ", ""));
-			selector.GetComponent<Image>().color = new Color32(247,153,12,255);
+			//reservationType = 
+			//Debug.Log(gameObject.transform.GetChild(0).name);
+			//reservationTypeName = GameObject.Find(gameObject.transform.GetChild(0).name).GetComponent<TextMeshProUGUI>().text;
+			Debug.Log(GameObject.Find(name).gameObject.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text);
+			reservationTypeName = GameObject.Find(name).gameObject.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text;
+			//selector.GetComponent<Image>().color = new Color32(247,153,12,255);
 			Debug.Log(number);
         }
-		else{
-			selector.GetComponent<Image>().color = new Color32(255,255,255,255);
-		}
+		//else{
+		//	//selector.GetComponent<Image>().color = new Color32(255,255,255,255);
+		//}
 	}
 	   
 	public async void Continue()
@@ -53,12 +59,14 @@ public class ServiceSelection : MonoBehaviour
 		
 		//"-" + uniqueID
 
-		DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser.UserId + "-" + getDate);
+		DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93-10-27-2021");
+		//DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser.UserId + "-" + getDate);
 		//DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser + "-" + getDate);
 		Dictionary<string, object> reservation = new Dictionary<string, object>
         {
-            {"reservationType", reservationType},
-            {"user", SignInWithGoogle.NewUser.UserId},
+	        {"reservationType", "EXPERIENCIA TOTAL"},
+            //{"user", SignInWithGoogle.NewUser.UserId},
+	        {"user", "5k9eMx6YwLcRJH9s8MwicqNMwi93"},
             {"reservationId", GenerateUniqueID(5)},
 		};
 		await docRef.SetAsync(reservation);
