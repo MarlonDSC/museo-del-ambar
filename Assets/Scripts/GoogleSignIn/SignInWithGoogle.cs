@@ -39,8 +39,8 @@ public class SignInWithGoogle : MonoBehaviour
 			if (loggedIn)
 			{
 				PrintMessage("Google Login Success> " + LCGoogleLoginBridge.GSIUserName());
-				UserID();
-				//StartCoroutine(LoadPanel());
+				//UserID();
+				StartCoroutine(LoadPanel());
 				SceneManager.LoadScene("SeleccionDeServicio");
 			}
 
