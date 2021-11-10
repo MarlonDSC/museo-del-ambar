@@ -39,5 +39,34 @@ public class Notifications : MonoBehaviour
 			AndroidNotificationCenter.SendNotification(notification, "channel_id");
 		}
 		
-	}		
+	}
+   
+   
+   
+   
+	// Update is called every frame, if the MonoBehaviour is enabled.
+	protected void Update()
+	{
+		
+		
+	}
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
 }

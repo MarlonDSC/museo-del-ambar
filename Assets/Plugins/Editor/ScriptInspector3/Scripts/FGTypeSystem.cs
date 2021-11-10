@@ -1,6 +1,6 @@
 ﻿/* SCRIPT INSPECTOR 3
- * version 3.0.29, May 2021
- * Copyright © 2012-2021, Flipbook Games
+ * version 3.0.28, March 2021
+ * Copyright © 2012-2020, Flipbook Games
  * 
  * Unity's legendary editor for C#, UnityScript, Boo, Shaders, and text,
  * now transformed into an advanced C# IDE!!!
@@ -58,7 +58,6 @@ public enum SymbolKind : byte
 	CaseVariable,
 	ForEachVariable,
 	FromClauseVariable,
-	OutVariable,
 	TypeParameter,
 	TypeParameterConstraintList,
 	BaseTypesList,
@@ -1827,12 +1826,6 @@ public class InstanceDefinition : SymbolDefinition
 							type = typeNode != null ? new SymbolReference(typeNode) : null;
 							break;
 
-						case SymbolKind.OutVariable:
-							if (decl.parseTreeNode.parent != null)
-								typeNode = decl.parseTreeNode.parent.NodeAt(0);
-							type = typeNode != null ? new SymbolReference(typeNode) : null;
-							break;
-
 						case SymbolKind.CaseVariable:
 							typeNode = decl.parseTreeNode.parent.FindChildByName("localVariableType");
 							type = typeNode != null ? new SymbolReference(typeNode) : null;
@@ -2860,7 +2853,7 @@ public class DelegateTypeDefinition : TypeDefinition
 
 	public override SymbolDefinition TypeOf()
 	{
-		return returnType == null ? builtInTypes_void : returnType.definition.IsValid() ? returnType.definition : unknownType;
+		return returnType != null && returnType.definition.IsValid() ? returnType.definition : unknownType;
 	}
 
 	public SymbolDefinition AddParameter(SymbolDeclaration symbol)
@@ -2935,7 +2928,7 @@ public class DelegateTypeDefinition : TypeDefinition
 	{
 		if (delegateInfoText == null)
 		{
-			delegateInfoText = TypeOf().GetName() + " " + GetName() + (parameters != null && parameters.Count == 1 ? "( " : "(");
+			delegateInfoText = returnType.definition.GetName() + " " + GetName() + (parameters != null && parameters.Count == 1 ? "( " : "(");
 			delegateInfoText += PrintParameters(parameters) + (parameters != null && parameters.Count == 1 ? " )" : ")");
 		}
 		return delegateInfoText;
@@ -4590,7 +4583,6 @@ public class MethodGroupDefinition : SymbolDefinition
 	public static List<TypeDefinitionBase> argumentTypesStack = new List<TypeDefinitionBase>();
 	public static List<SymbolDefinition> resolvedArgumentsStack = new List<SymbolDefinition>();
 	public static List<string> namedArgumentsStack = new List<string>();
-	public static List<ParseTree.Node> argumentNodesStack = new List<ParseTree.Node>();
 	
 	public static int ProcessArgumentListNode(ParseTree.Node argumentListNode, TypeDefinitionBase extendedType)
 	{
@@ -4605,7 +4597,6 @@ public class MethodGroupDefinition : SymbolDefinition
 			argumentTypesStack.Add(extendedType);
 			resolvedArgumentsStack.Add(null);//extendedType.GetThisInstance());
 			namedArgumentsStack.Add(null);
-			argumentNodesStack.Add(null);
 		}
 		
 		for (var i = thisOffest; i < numArguments; ++i)
@@ -4621,7 +4612,6 @@ public class MethodGroupDefinition : SymbolDefinition
 					argumentTypesStack.Add(unknownType);
 					modifiersStack.Add(Modifiers.None);
 					namedArgumentsStack.Add(null);
-					argumentNodesStack.Add(argumentNode);
 					
 					if (resolvedArg != null)
 						argumentTypesStack[argumentTypesStack.Count - 1] = resolvedArg.TypeOf() as TypeDefinitionBase ?? unknownType;
@@ -4695,7 +4685,6 @@ public class MethodGroupDefinition : SymbolDefinition
 		argumentTypesStack.RemoveRange(baseIndex, numArguments);
 		resolvedArgumentsStack.RemoveRange(baseIndex, numArguments);
 		namedArgumentsStack.RemoveRange(baseIndex, numArguments);
-		argumentNodesStack.RemoveRange(baseIndex, numArguments);
 		
 		return resolved;
 	}
@@ -4997,17 +4986,17 @@ public class MethodGroupDefinition : SymbolDefinition
 				}
 
 				var argumentType = argumentTypesStack[argsBaseIndex + i];
-				//if (argumentType == null || argumentType == unknownType)
-				//{
-				//	exactMatches = -1;
-				//	break;
-				//}
+				if (argumentType == null || argumentType == unknownType)
+				{
+					exactMatches = -1;
+					break;
+				}
 
-				bool isSameType = argumentType == null || argumentType == unknownType || argumentType.IsSameType(parameterType);
+				bool isSameType = argumentType.IsSameType(parameterType);
 				if (isSameType)
 				{
 					if (CsParser.isCSharp4)
-					{
+					{						
 						++exactMatches;
 						continue;
 					}
@@ -5020,8 +5009,7 @@ public class MethodGroupDefinition : SymbolDefinition
 						continue;
 					}
 				}
-				var isRefOrOut = (modifiersStack[argsBaseIndex + i] & (Modifiers.Ref | Modifiers.Out)) != Modifiers.None;
-				if (!isRefOrOut && !isSameType && !argumentType.CanConvertTo(parameterType))
+				if (!isSameType && !argumentType.CanConvertTo(parameterType))
 				{
 					if (numCandidates == 1 && argumentType.kind == SymbolKind.TypeParameter)
 					{
@@ -5063,100 +5051,33 @@ public class MethodGroupDefinition : SymbolDefinition
 			var parameters = bestMatch.GetParameters();
 			for (var i = numArguments; i --> 0; )
 			{
-				var parameterIndex = -1;
-				
-				var argModifier = modifiersStack[argsBaseIndex + i];
-				if (argModifier == Modifiers.Out)
-				{
-					var argumentValueNode = argumentNodesStack[argsBaseIndex + i].NodeAt(-1);
-					if (argumentValueNode != null)
-					{
-						var outVariableDeclarationNode = argumentValueNode.NodeAt(1);
-						if (outVariableDeclarationNode != null)
-						{
-							var localVariableTypeNode = outVariableDeclarationNode.NodeAt(0);
-							if (localVariableTypeNode != null)
-							{
-								var varNode = localVariableTypeNode.NodeAt(0);
-								if (varNode != null && varNode.RuleName == "VAR")
-								{
-									if (parameterIndex == -1)
-									{
-										parameterIndex = i;
-										if (parameterIndex >= firstNamedArgIndex)
-										{
-											var argName = namedArgumentsStack[argsBaseIndex + i];
-					
-											parameterIndex = firstNamedArgIndex;
-											while (parameterIndex < parameters.Count)
-											{
-												if (argName == parameters[parameterIndex].name)
-													break;
-												++parameterIndex;
-											}
-											if (parameterIndex == parameters.Count)
-											{
-#if SI3_WARNINGS
-												Debug.LogError("Error finding parameter name " + argName + " in " + bestMatch.GetTooltipText());
-#endif
-											}
-										}
-									}
-									
-									if (parameterIndex < parameters.Count)
-									{
-										var varLeaf = varNode.LeafAt(0);
-										var argumentType = parameters[parameterIndex].TypeOf();
-										if (argumentType != null)
-											argumentType = argumentType.SubstituteTypeParameters(bestMatch);
-										
-										varLeaf.resolvedSymbol = argumentType;
-										resolvedArgumentsStack[argsBaseIndex + i] = argumentType;
-									}
-								}
-							}
-						}
-					}
-				}
-				
 				var r = resolvedArgumentsStack[argsBaseIndex + i] as MethodGroupDefinition;
-				if (r == null)
+				if (r != null && r.kind == SymbolKind.MethodGroup)
 				{
-					continue;
-				}
-				
-				if (r.kind == SymbolKind.MethodGroup)
-				{
-					if (parameterIndex == -1)
+					var parameterIndex = i;
+					if (parameterIndex >= firstNamedArgIndex)
 					{
-						parameterIndex = i;
-						if (parameterIndex >= firstNamedArgIndex)
-						{
-							var argName = namedArgumentsStack[argsBaseIndex + i];
+						var argName = namedArgumentsStack[argsBaseIndex + i];
 					
-							parameterIndex = firstNamedArgIndex;
-							while (parameterIndex < parameters.Count)
-							{
-								if (argName == parameters[parameterIndex].name)
-									break;
-								++parameterIndex;
-							}
-							if (parameterIndex == parameters.Count)
-							{
+						parameterIndex = firstNamedArgIndex;
+						while (parameterIndex < parameters.Count)
+						{
+							if (argName == parameters[parameterIndex].name)
+								break;
+							++parameterIndex;
+						}
+						if (parameterIndex == parameters.Count)
+						{
 #if SI3_WARNINGS
-								Debug.LogError("Error finding parameter name " + argName + " in " + bestMatch.GetTooltipText());
+							Debug.LogError("Error finding parameter name " + argName + " in " + bestMatch.GetTooltipText());
 #endif
-							}
 						}
 					}
 					
-					if (parameterIndex < parameters.Count)
+					var matchingMethod = r.FindMatchingMethod(parameters[parameterIndex].TypeOf() as TypeDefinitionBase);
+					if (matchingMethod != null)
 					{
-						var matchingMethod = r.FindMatchingMethod(parameters[parameterIndex].TypeOf() as TypeDefinitionBase);
-						if (matchingMethod != null)
-						{
-							resolvedArgumentsStack[argsBaseIndex + i] = matchingMethod;
-						}
+						resolvedArgumentsStack[argsBaseIndex + i] = matchingMethod;
 					}
 				}
 			}
@@ -6567,7 +6488,6 @@ public class BodyScope : LocalScope
 		case SymbolKind.CaseVariable:
 		case SymbolKind.ForEachVariable:
 		case SymbolKind.FromClauseVariable:
-		case SymbolKind.OutVariable:
 			return base.AddDeclaration(symbol);
 		}
 
@@ -6580,7 +6500,6 @@ public class BodyScope : LocalScope
 		{
 		case SymbolKind.LocalConstant:
 		case SymbolKind.Variable:
-		case SymbolKind.OutVariable:
 		case SymbolKind.CaseVariable:
 		case SymbolKind.ForEachVariable:
 		case SymbolKind.FromClauseVariable:
@@ -7097,7 +7016,6 @@ public class NamespaceScope : Scope
 				MethodGroupDefinition.argumentTypesStack.RemoveRange(argsBaseIndex, numArguments);
 				MethodGroupDefinition.resolvedArgumentsStack.RemoveRange(argsBaseIndex, numArguments);
 				MethodGroupDefinition.namedArgumentsStack.RemoveRange(argsBaseIndex, numArguments);
-				MethodGroupDefinition.argumentNodesStack.RemoveRange(argsBaseIndex, numArguments);
 				
 				if (invokedLeaf != null)
 					invokedLeaf.resolvedSymbol = resolved;
@@ -7112,7 +7030,6 @@ public class NamespaceScope : Scope
 		MethodGroupDefinition.argumentTypesStack.RemoveRange(argsBaseIndex, numArguments);
 		MethodGroupDefinition.resolvedArgumentsStack.RemoveRange(argsBaseIndex, numArguments);
 		MethodGroupDefinition.namedArgumentsStack.RemoveRange(argsBaseIndex, numArguments);
-		MethodGroupDefinition.argumentNodesStack.RemoveRange(argsBaseIndex, numArguments);
 				
 		if (firstAccessibleMethod != null && invokedLeaf != null)
 		{
@@ -7189,7 +7106,6 @@ public class NamespaceScope : Scope
 					MethodGroupDefinition.argumentTypesStack.RemoveRange(argsBaseIndex, numArguments);
 					MethodGroupDefinition.resolvedArgumentsStack.RemoveRange(argsBaseIndex, numArguments);
 					MethodGroupDefinition.namedArgumentsStack.RemoveRange(argsBaseIndex, numArguments);
-					MethodGroupDefinition.argumentNodesStack.RemoveRange(argsBaseIndex, numArguments);
 					
 					return resolved;
 				}
@@ -7254,7 +7170,6 @@ public class NamespaceScope : Scope
 				MethodGroupDefinition.argumentTypesStack.RemoveRange(argsBaseIndex, numArguments);
 				MethodGroupDefinition.resolvedArgumentsStack.RemoveRange(argsBaseIndex, numArguments);
 				MethodGroupDefinition.namedArgumentsStack.RemoveRange(argsBaseIndex, numArguments);
-				MethodGroupDefinition.argumentNodesStack.RemoveRange(argsBaseIndex, numArguments);
 				
 				return resolved;
 			}
@@ -7264,7 +7179,6 @@ public class NamespaceScope : Scope
 		MethodGroupDefinition.argumentTypesStack.RemoveRange(argsBaseIndex, numArguments);
 		MethodGroupDefinition.resolvedArgumentsStack.RemoveRange(argsBaseIndex, numArguments);
 		MethodGroupDefinition.namedArgumentsStack.RemoveRange(argsBaseIndex, numArguments);
-		MethodGroupDefinition.argumentNodesStack.RemoveRange(argsBaseIndex, numArguments);
 		
 		if (parentScope != null)
 		{
@@ -7501,26 +7415,6 @@ public class MemberInitializerScope : Scope
 	public override SymbolDefinition FindName(string symbolName, int numTypeParameters)
 	{
 		throw new InvalidOperationException("Calling FindName on MemberInitializerScope is not allowed!");
-	}
-}
-
-public class BaseScope : Scope
-{
-	public BaseScope(ParseTree.Node node) : base(node) {}
-	
-	public override SymbolDefinition AddDeclaration(SymbolDeclaration symbol)
-	{
-		return parentScope.AddDeclaration(symbol);
-	}
-
-	public override void RemoveDeclaration(SymbolDeclaration symbol)
-	{
-		parentScope.RemoveDeclaration(symbol);
-	}
-
-	public override SymbolDefinition FindName(string symbolName, int numTypeParameters)
-	{
-		return parentScope.FindName(symbolName, numTypeParameters);
 	}
 }
 
@@ -8165,7 +8059,6 @@ public class SymbolDefinition
 			case SymbolKind.ForEachVariable:
 			case SymbolKind.FromClauseVariable:
 			case SymbolKind.Variable:
-			case SymbolKind.OutVariable:
 			case SymbolKind.Field:
 			case SymbolKind.ConstantField:
 			case SymbolKind.LocalConstant:
@@ -8439,11 +8332,7 @@ public class SymbolDefinition
 			if (member.kind == SymbolKind.Delegate)
 			{
 				var memberAsDelegate = (DelegateTypeDefinition) member;
-				var typeNode = symbol.parseTreeNode.FindChildByName("type");
-				if (typeNode == null)
-					memberAsDelegate.returnType = null;
-				else
-					memberAsDelegate.returnType = new SymbolReference(typeNode);
+				memberAsDelegate.returnType = new SymbolReference(symbol.parseTreeNode.FindChildByName("type"));
 			}
 			else if (member.kind == SymbolKind.Enum)
 			{
@@ -8804,7 +8693,6 @@ public class SymbolDefinition
 			case SymbolKind.Property: kindText = "(property) "; break;
 			case SymbolKind.Event: kindText = "(event) "; break;
 			case SymbolKind.Variable:
-			case SymbolKind.OutVariable:
 			case SymbolKind.CaseVariable:
 			case SymbolKind.ForEachVariable:
 			case SymbolKind.FromClauseVariable:
@@ -9540,7 +9428,6 @@ public class SymbolDefinition
 		var argumentTypesStack = MethodGroupDefinition.argumentTypesStack;
 		var resolvedArgumentsStack = MethodGroupDefinition.resolvedArgumentsStack;
 		var modifiersStack = MethodGroupDefinition.modifiersStack;
-		var argumentsStack = MethodGroupDefinition.argumentNodesStack;
 		
 		argumentTypesStack.Add(lhsType);
 		argumentTypesStack.Add(rhsType);
@@ -9550,8 +9437,6 @@ public class SymbolDefinition
 		modifiersStack.Add(Modifiers.None);
 		MethodGroupDefinition.namedArgumentsStack.Add(null);
 		MethodGroupDefinition.namedArgumentsStack.Add(null);
-		argumentsStack.Add(null);
-		argumentsStack.Add(null);
 		
 		var candidatesStack = MethodGroupDefinition.methodCandidatesStack;
 		int lhsBaseIndex = candidatesStack.Count;
@@ -9623,7 +9508,6 @@ public class SymbolDefinition
 				argumentTypesStack.RemoveRange(argsBaseIndex, 2);
 				resolvedArgumentsStack.RemoveRange(argsBaseIndex, 2);
 				MethodGroupDefinition.namedArgumentsStack.RemoveRange(argsBaseIndex, 2);
-				argumentsStack.RemoveRange(argsBaseIndex, 2);
 				
 				return result;
 			}
@@ -9638,7 +9522,6 @@ public class SymbolDefinition
 		argumentTypesStack.RemoveRange(argsBaseIndex, 2);
 		resolvedArgumentsStack.RemoveRange(argsBaseIndex, 2);
 		MethodGroupDefinition.namedArgumentsStack.RemoveRange(argsBaseIndex, 2);
-		argumentsStack.RemoveRange(argsBaseIndex, 2);
 		
 		var returnType = resolvedOverload.ReturnType();
 		return returnType == null ? null : returnType.GetThisInstance();
@@ -9954,33 +9837,9 @@ public class SymbolDefinition
 		"lambdaExpression",
 		"lambdaExpressionBody"
 	};
-
-//#define MEASURE_RESOLVENODE_DEPTH
+	
 	public static SymbolDefinition ResolveNode(ParseTree.BaseNode baseNode, Scope scope = null, SymbolDefinition asMemberOf = null, int numTypeArguments = 0, bool asTypeOnly = false)
-#if MEASURE_RESOLVENODE_DEPTH
 	{
-		++resolveNodeDepth;
-		if (resolveNodeDepth > resolveNodeDepthMax)
-		{
-			Debug.Log("New max depth: " + resolveNodeDepth);
-			resolveNodeDepthMax = resolveNodeDepth;
-		}
-		
-		var result = _ResolveNode(baseNode, scope, asMemberOf, numTypeArguments, asTypeOnly);
-		
-		--resolveNodeDepth;
-		return result;
-	}
-	
-	private static int resolveNodeDepth = 0;
-	private static int resolveNodeDepthMax = 0;
-	
-	private static SymbolDefinition _ResolveNode(ParseTree.BaseNode baseNode, Scope scope = null, SymbolDefinition asMemberOf = null, int numTypeArguments = 0, bool asTypeOnly = false)
-#endif
-	{
-	// A goto label to avoid recursion when possible:
-	reresolve:
-		
 		var node = baseNode as ParseTree.Node;
 
 		if (scope == null)
@@ -10231,14 +10090,6 @@ public class SymbolDefinition
 					case SyntaxToken.Kind.StringLiteral:
 					case SyntaxToken.Kind.VerbatimStringBegin:
 					case SyntaxToken.Kind.VerbatimStringLiteral:
-					case SyntaxToken.Kind.InterpolatedStringWholeLiteral:
-					case SyntaxToken.Kind.InterpolatedStringEndLiteral:
-						leaf.resolvedSymbol = builtInTypes_string.GetThisInstance();
-						break;
-						
-					case SyntaxToken.Kind.InterpolatedStringStartLiteral:
-					case SyntaxToken.Kind.InterpolatedStringMidLiteral:
-					case SyntaxToken.Kind.InterpolatedStringFormatLiteral:
 						leaf.resolvedSymbol = builtInTypes_string.GetThisInstance();
 						break;
 
@@ -10277,27 +10128,9 @@ public class SymbolDefinition
 //		Debug.Log("Resolving node: " + node);
 		switch (node.RuleName)
 		{
-			case "interpolatedStringLiteral":
-				{
-					var child = node.FirstChild;
-					while (child != null)
-					{
-						ResolveNode(child, scope);
-						child = child.nextSibling;
-					}
-				}
-				return builtInTypes_string.GetThisInstance();
-			
 			case "localVariableType":
 				if (node.numValidNodes == 1)
-				{
-					baseNode = node.ChildAt(0);
-					//scope = scope;
-					//asMemberOf = asMemberOf;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
+					return ResolveNode(node.ChildAt(0), scope, asMemberOf);
 				break;
 
 			case "GET":
@@ -10363,37 +10196,6 @@ public class SymbolDefinition
 							varLeaf.resolvedSymbol = initExpr.TypeOf();
 						else
 							varLeaf.resolvedSymbol = unknownType;
-					}
-				}
-				else if (node.parent.parent.RuleName == "outVariableDeclaration")
-				{
-					ParseTree.Leaf methodLeaf = null;
-					
-					var argumentsNode = node.FindParentByName("arguments");
-					varDeclsNode = argumentsNode.parent.FindPreviousNode() as ParseTree.Node;
-					if (varDeclsNode.RuleName == "primaryExpressionStart")
-					{
-						methodLeaf = varDeclsNode.GetFirstLeaf(true);
-					}
-					else
-					{
-						var accessIdentifierNode = varDeclsNode.NodeAt(0);
-						if (accessIdentifierNode != null && accessIdentifierNode.RuleName == "accessIdentifier")
-						{
-							methodLeaf = accessIdentifierNode.LeafAt(1);
-						}
-						else
-						{
-#if SI3_WARNINGS
-							Debug.LogError(varDeclsNode);
-#endif
-						}
-					}
-					
-					var varLeaf = node.ChildAt(0);
-					if (methodLeaf == null || methodLeaf.resolvedSymbol == null && methodLeaf.semanticError != null)
-					{
-						varLeaf.resolvedSymbol = unknownType;
 					}
 				}
 				else if (node.parent.parent.numValidNodes >= 2)
@@ -10486,12 +10288,7 @@ public class SymbolDefinition
 				return resolvedType;
 			
 			case "globalNamespace":
-				baseNode = node.ChildAt(0);
-				//scope = scope;
-				asMemberOf = null;
-				numTypeArguments = 0;
-				asTypeOnly = false;
-				goto reresolve;
+				return ResolveNode(node.ChildAt(0), scope, null, 0);
 
 			case "nonArrayType":
 				var nonArrayTypeSymbol = ResolveNode(node.ChildAt(0), scope, asMemberOf, 0, true);
@@ -10555,12 +10352,7 @@ public class SymbolDefinition
 					}
 					return lastLeaf.resolvedSymbol;
 				}
-				baseNode = node.ChildAt(0);
-				//scope = scope;
-				//asMemberOf = asMemberOf;
-				numTypeArguments = 0;
-				asTypeOnly = true;
-				goto reresolve;
+				return ResolveNode(node.ChildAt(0), scope, asMemberOf, 0, true);
 
 			case "namespaceName":
 				var resolvedSymbol = ResolveNode(node.ChildAt(0), scope, asMemberOf, 0, true);
@@ -10575,12 +10367,7 @@ public class SymbolDefinition
 				return part;
 
 			case "usingAliasDirective":
-				baseNode = node.ChildAt(0);
-				//scope = scope;
-				asMemberOf = null;
-				numTypeArguments = 0;
-				asTypeOnly = false;
-				goto reresolve;
+				return ResolveNode(node.ChildAt(0), scope);
 
 			case "qualifiedIdentifier":
 				part = ResolveNode(node.ChildAt(0), scope) as NamespaceDefinition;
@@ -10773,7 +10560,6 @@ public class SymbolDefinition
 							case SymbolKind.Event:
 							case SymbolKind.LocalConstant:
 							case SymbolKind.Variable:
-							case SymbolKind.OutVariable:
 							case SymbolKind.CaseVariable:
 							case SymbolKind.ForEachVariable:
 							case SymbolKind.FromClauseVariable:
@@ -10874,14 +10660,7 @@ public class SymbolDefinition
 
 			case "primaryExpressionStart":
 				if (node.numValidNodes == 1)
-				{
-					baseNode = node.ChildAt(0);
-					//scope = scope;
-					asMemberOf = null;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
+					return ResolveNode(node.ChildAt(0), scope, null);
 				if (node.numValidNodes == 2)
 				{
 					var typeArgsNode = node.NodeAt(1);
@@ -10889,14 +10668,7 @@ public class SymbolDefinition
 						numTypeArguments = typeArgsNode.numValidNodes / 2;
 					asMemberOf = ResolveNode(node.ChildAt(0), scope, null, numTypeArguments);
 					if (asMemberOf is TypeDefinitionBase)
-					{
-						baseNode = typeArgsNode;
-						//scope = scope;
-						//asMemberOf = asMemberOf;
-						numTypeArguments = 0;
-						asTypeOnly = false;
-						goto reresolve;
-					}
+						return ResolveNode(typeArgsNode, scope, asMemberOf);
 					else
 						return asMemberOf;
 					//return ResolveNode(node.ChildAt(0), scope, null, numTypeArguments);
@@ -10904,13 +10676,7 @@ public class SymbolDefinition
 				if (node.numValidNodes == 3)
 				{
 					part = ResolveNode(node.ChildAt(0), scope, null);
-					
-					baseNode = node.ChildAt(2);
-					//scope = scope;
-					asMemberOf = part;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
+					return ResolveNode(node.ChildAt(2), scope, part);
 				}
 				break;
 
@@ -10922,14 +10688,7 @@ public class SymbolDefinition
 						asMemberOf = asMemberOf.TypeOf();
 				}
 				if (asMemberOf != null)
-				{
-					baseNode = node.ChildAt(0);
-					//scope = scope;
-					//asMemberOf = asMemberOf;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
+					return ResolveNode(node.ChildAt(0), scope, asMemberOf);
 				break;
 
 			case "brackets":
@@ -10984,14 +10743,7 @@ public class SymbolDefinition
 				{
 					var node1 = node.ChildAt(1);
 					if (!node1.missing)
-					{
-						baseNode = node.ChildAt(1);
-						//scope = scope;
-						//asMemberOf = asMemberOf;
-						numTypeArguments = 0;
-						asTypeOnly = false;
-						goto reresolve;
-					}
+						return ResolveNode(node.ChildAt(1), scope, asMemberOf);
 				}
 				else if (node.numValidNodes == 3)
 				{
@@ -10999,13 +10751,7 @@ public class SymbolDefinition
 					if (typeArgsNode != null && typeArgsNode.RuleName == "typeArgumentList")
 						numTypeArguments = typeArgsNode.numValidNodes / 2;
 					asMemberOf = ResolveNode(node.ChildAt(1), scope, asMemberOf, numTypeArguments);
-					
-					baseNode = typeArgsNode;
-					//scope = scope;
-					//asMemberOf = asMemberOf;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
+					return ResolveNode(typeArgsNode, scope, asMemberOf);
 				}
 				return asMemberOf;
 
@@ -11157,25 +10903,13 @@ public class SymbolDefinition
 				if (node.numValidNodes >= 1)
 				{
 					if (node.numValidNodes == 1)
-					{
-						baseNode = node.ChildAt(0);
-						//scope = scope;
-						asMemberOf = null;
-						numTypeArguments = 0;
-						asTypeOnly = false;
-						goto reresolve;
-					}
+						return ResolveNode(node.ChildAt(0), scope);
 					else
 						ResolveNode(node.ChildAt(0), scope);
 				}
 				if (node.numValidNodes == 3)
 				{
-					baseNode = node.ChildAt(2);
-					//scope = scope;
-					asMemberOf = null;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
+					return ResolveNode(node.ChildAt(2), scope);
 				}
 				return resolvedChildren;
 
@@ -11183,25 +10917,13 @@ public class SymbolDefinition
 				if (node.numValidNodes >= 1)
 				{
 					if (node.numValidNodes == 1)
-					{
-						baseNode = node.ChildAt(0);
-						//scope = scope;
-						asMemberOf = null;
-						numTypeArguments = 0;
-						asTypeOnly = false;
-						goto reresolve;
-					}
+						return ResolveNode(node.ChildAt(0), scope);
 					else
 						ResolveNode(node.ChildAt(0), scope, asMemberOf);
 				}
 				if (node.numValidNodes == 3)
 				{
-					baseNode = node.ChildAt(2);
-					//scope = scope;
-					asMemberOf = null;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
+					return ResolveNode(node.ChildAt(2), scope);
 				}
 				return resolvedChildren;
 			
@@ -11216,12 +10938,7 @@ public class SymbolDefinition
 				return resolvedChildren;
 
 			case "argumentValue":
-				baseNode = node.ChildAt(-1);
-				//scope = scope;
-				asMemberOf = null;
-				numTypeArguments = 0;
-				asTypeOnly = false;
-				goto reresolve;
+				return ResolveNode(node.ChildAt(-1), scope);
 
 			case "argumentName":
 				//return ResolveNode(node.ChildAt(0), asMemberOf: asMemberOf);
@@ -11245,14 +10962,7 @@ public class SymbolDefinition
 			case "attributeMemberName":
 				var asType = asMemberOf as TypeDefinitionBase;
 				if (asType != null)
-				{
-					baseNode = node.ChildAt(0);
-					//scope = scope;
-					asMemberOf = asType.GetThisInstance();
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
+					return ResolveNode(node.ChildAt(0), scope, asType.GetThisInstance());
 				return unknownSymbol;
 
 			case "castExpression":
@@ -11293,45 +11003,23 @@ public class SymbolDefinition
 			case "checkedExpression":
 			case "uncheckedExpression":
 				if (node.numValidNodes >= 3)
-				{
-					baseNode = node.ChildAt(2);
-					//scope = scope;
-					asMemberOf = null;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
+					return ResolveNode(node.ChildAt(2), scope);
 				return unknownSymbol;
 
 			case "assignment":
 				if (node.numValidNodes >= 3)
 					ResolveNode(node.ChildAt(2), scope);
-				baseNode = node.ChildAt(0);
-				//scope = scope;
-				asMemberOf = null;
-				numTypeArguments = 0;
-				asTypeOnly = false;
-				goto reresolve;
+				return ResolveNode(node.ChildAt(0), scope);
 			
 			case "localVariableInitializer":
 			case "variableReference":
 			case "expression":
 			case "constantExpression":
 			case "nonAssignmentExpression":
-				baseNode = node.ChildAt(0);
-				//scope = scope;
-				asMemberOf = null;
-				numTypeArguments = 0;
-				asTypeOnly = false;
-				goto reresolve;
+				return ResolveNode(node.ChildAt(0), scope);
 
 			case "parenExpression":
-				baseNode = node.ChildAt(1);
-				//scope = scope;
-				asMemberOf = null;
-				numTypeArguments = 0;
-				asTypeOnly = false;
-				goto reresolve;
+				return ResolveNode(node.ChildAt(1), scope);
 
 			case "nullCoalescingExpression":
 				for (var i = 2; i < node.numValidNodes; i += 2)
@@ -11360,40 +11048,14 @@ public class SymbolDefinition
 					return typeLeft != nullLiteral ? typeLeft : typeRight;
 				}
 				else
-				{
-					baseNode = node.ChildAt(0);
-					//scope = scope;
-					//asMemberOf = asMemberOf;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
+					return ResolveNode(node.ChildAt(0), scope, asMemberOf);
 
 			case "unaryExpression":
 				if (node.numValidNodes == 1)
-				{
-					baseNode = node.ChildAt(0);
-					//scope = scope;
-					asMemberOf = null;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
+					return ResolveNode(node.ChildAt(0), scope, null);
 				if (node.ChildAt(0) is ParseTree.Node)
-				{
-					baseNode = node.ChildAt(0);
-					//scope = scope;
-					asMemberOf = null;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
-				baseNode = node.ChildAt(1);
-				//scope = scope;
-				asMemberOf = null;
-				numTypeArguments = 0;
-				asTypeOnly = false;
-				goto reresolve;
+					return ResolveNode(node.ChildAt(0), scope, null);
+				return ResolveNode(node.ChildAt(1), scope, null);
 			
 			case "awaitExpression":
 				if (node.numValidNodes < 2)
@@ -11444,14 +11106,7 @@ public class SymbolDefinition
 			case "preIncrementExpression":
 			case "preDecrementExpression":
 				if (node.numValidNodes == 2)
-				{
-					baseNode = node.ChildAt(1);
-					//scope = scope;
-					asMemberOf = null;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
+					return ResolveNode(node.ChildAt(1), scope, null);
 				return builtInTypes_int.GetThisInstance();
 
 			case "inclusiveOrExpression":
@@ -11461,12 +11116,7 @@ public class SymbolDefinition
 			case "multiplicativeExpression":
 				for (var i = 2; i < node.numValidNodes; i += 2)
 					ResolveNode(node.ChildAt(i), scope);
-				baseNode = node.ChildAt(0);
-				//scope = scope;
-				asMemberOf = null;
-				numTypeArguments = 0;
-				asTypeOnly = false;
-				goto reresolve; // HACK
+				return ResolveNode(node.ChildAt(0), scope); // HACK
 
 			case "additiveExpression":
 				part = ResolveNode(node.ChildAt(0), scope);
@@ -11533,14 +11183,7 @@ public class SymbolDefinition
 			case "arrayInitializer":
 				if (node.numValidNodes >= 2)
 					if (!node.ChildAt(1).IsLit("}"))
-					{
-						baseNode = node.ChildAt(1);
-						//scope = scope;
-						asMemberOf = null;
-						numTypeArguments = 0;
-						asTypeOnly = false;
-						goto reresolve;
-					}
+						return ResolveNode(node.ChildAt(1), scope);
 				return unknownType;
 
 			case "variableInitializerList":
@@ -11565,12 +11208,7 @@ public class SymbolDefinition
 				return commonType;
 
 			case "variableInitializer":
-				baseNode = node.ChildAt(0);
-				//scope = scope;
-				asMemberOf = null;
-				numTypeArguments = 0;
-				asTypeOnly = false;
-				goto reresolve;
+				return ResolveNode(node.ChildAt(0), scope);
 
 			case "conditionalOrExpression":
 				if (node.numValidNodes == 1)
@@ -11651,14 +11289,7 @@ public class SymbolDefinition
 			case "lambdaExpressionBody":
 				var expressionNode = node.NodeAt(0);
 				if (expressionNode != null)
-				{
-					baseNode = expressionNode;
-					scope = null;
-					asMemberOf = null;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
+					return ResolveNode(expressionNode);
 				//TODO: Resolve type from return statements!
 				return null;
 
@@ -11704,44 +11335,19 @@ public class SymbolDefinition
 
 			case "qidStart":
 				if (node.numValidNodes == 1)
-				{
-					baseNode = node.ChildAt(0);
-					//scope = scope;
-					asMemberOf = null;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
+					return ResolveNode(node.ChildAt(0), scope);
 				if (node.numValidNodes == 2 && node.NodeAt(1) != null)
 				{
 					ResolveNode(node.ChildAt(1), scope);
-
-					baseNode = node.ChildAt(0);
-					//scope = scope;
-					asMemberOf = null;
-					numTypeArguments = node.NodeAt(1).numValidNodes / 2;
-					asTypeOnly = true;
-					goto reresolve;
+					return ResolveNode(node.ChildAt(0), scope, null, node.NodeAt(1).numValidNodes / 2, true);
 				}
 				asMemberOf = ResolveNode(node.ChildAt(0), scope);
 				if (asMemberOf != null && asMemberOf.kind != SymbolKind.Error && node.numValidNodes == 3)
-				{
-					baseNode = node.ChildAt(2);
-					//scope = scope;
-					//asMemberOf = asMemberOf;
-					numTypeArguments = 0;
-					asTypeOnly = false;
-					goto reresolve;
-				}
+					return ResolveNode(node.ChildAt(2), scope, asMemberOf);
 				return unknownSymbol;
 
 			case "qidPart":
-				baseNode = node.ChildAt(0);
-				//scope = scope;
-				//asMemberOf = asMemberOf;
-				numTypeArguments = 0;
-				asTypeOnly = false;
-				goto reresolve;
+				return ResolveNode(node.ChildAt(0), scope, asMemberOf);
 				
 			case "classMemberDeclaration":
 				return null;
@@ -12181,7 +11787,6 @@ public class SymbolDeclaration //: IVisitableTreeNode<SymbolDeclaration, SymbolD
 			case "interfacePropertyDeclaration":
 			case "variableDeclarator":
 			case "localVariableDeclarator":
-			case "outVariableDeclarator":
 			case "caseVariableDeclarator":
 			case "constantDeclarator":
 			case "interfaceMethodDeclaration":
@@ -13904,7 +13509,6 @@ public static class FGResolver
 			case "primaryExpressionPart":
 				return GetResolvedSymbol(node.NodeAt(0));
 			case "arguments":
-			case "attributeArguments":
 				return GetResolvedSymbol(node.FindPreviousNode() as ParseTree.Node);
 			case "objectCreationExpression":
 				var newType = GetResolvedSymbol(node.FindPreviousNode() as ParseTree.Node);
@@ -14009,7 +13613,6 @@ public static class FGResolver
 				case SymbolKind.Parameter:
 				case SymbolKind.CatchParameter:
 				case SymbolKind.Variable:
-				case SymbolKind.OutVariable:
 				case SymbolKind.CaseVariable:
 				case SymbolKind.ForEachVariable:
 				case SymbolKind.FromClauseVariable:
@@ -14088,8 +13691,6 @@ public static class FGResolver
 			Debug.LogError("modifiersStack.Count == " + MethodGroupDefinition.modifiersStack.Count);
 		if (MethodGroupDefinition.namedArgumentsStack.Count != 0)
 			Debug.LogError("namedArguments.Count == " + MethodGroupDefinition.namedArgumentsStack.Count);
-		if (MethodGroupDefinition.argumentNodesStack.Count != 0)
-			Debug.LogError("argumentNodesStack.Count == " + MethodGroupDefinition.argumentNodesStack.Count);
 		
 		if (MethodGroupDefinition.methodCandidatesStack.Count != 0)
 			Debug.LogError("methodCandidatesStack.Count == " + MethodGroupDefinition.methodCandidatesStack.Count);
@@ -14130,7 +13731,6 @@ public static class FGResolver
 //				case "localVariableType":
 //				case "localVariableDeclaration":
 				case "caseVariableDeclarator":
-				case "outVariableDeclarator":
 				case "arrayCreationExpression":
 				case "implicitArrayCreationExpression":
 				case "arrayInitializer":
@@ -14178,10 +13778,7 @@ public static class FGResolver
 			MethodGroupDefinition.resolvedArgumentsStack.Clear();
 			MethodGroupDefinition.modifiersStack.Clear();
 			MethodGroupDefinition.namedArgumentsStack.Clear();
-			MethodGroupDefinition.argumentNodesStack.Clear();
-			
 			MethodGroupDefinition.methodCandidatesStack.Clear();
-			
 			return null;
 		}
 		
@@ -14257,7 +13854,6 @@ public static class FGResolver
 		case SymbolKind.ForEachVariable:
 		case SymbolKind.FromClauseVariable:
 		case SymbolKind.Variable:
-		case SymbolKind.OutVariable:
 		case SymbolKind.LocalConstant:
 		case SymbolKind.ConstantField:
 		case SymbolKind.Event:
@@ -14296,10 +13892,6 @@ public static class FGResolver
 				// always initialized
 			}
 			else if (parentRule == "caseVariableDeclarator")
-			{
-				// always initialized
-			}
-			else if (parentRule == "outVariableDeclarator")
 			{
 				// always initialized
 			}

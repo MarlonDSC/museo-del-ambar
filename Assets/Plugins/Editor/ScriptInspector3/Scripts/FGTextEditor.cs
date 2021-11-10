@@ -1,6 +1,6 @@
 ﻿/* SCRIPT INSPECTOR 3
- * version 3.0.29, May 2021
- * Copyright © 2012-2021, Flipbook Games
+ * version 3.0.28, March 2021
+ * Copyright © 2012-2020, Flipbook Games
  * 
  * Unity's legendary editor for C#, UnityScript, Boo, Shaders, and text,
  * now transformed into an advanced C# IDE!!!
@@ -89,7 +89,6 @@ public class FGTextEditor
 		public GUIStyle mailtoStyle;
 
 		public GUIStyle keywordStyle;
-		public GUIStyle controlKeywordStyle;
 		public GUIStyle constantStyle;
 		public GUIStyle stringStyle;
 		public GUIStyle builtInLiteralsStyle;
@@ -183,8 +182,6 @@ public class FGTextEditor
 	[NonSerialized]
 	private Rect contentRect;
 	[NonSerialized]
-	private float widestLine = 1f;
-	[NonSerialized]
 	private bool needsRepaint;
 	[NonSerialized]
 	private bool needsReformat;
@@ -196,7 +193,7 @@ public class FGTextEditor
 	[NonSerialized]
 	private EditorWindow parentWindow;
 	public Vector2 charSize { get; private set; }
-	//private Dictionary<string, float> tokenWidths = new Dictionary<string, float>();
+	private Dictionary<string, float> tokenWidths = new Dictionary<string, float>();
 	
 	private bool wordWrapping;
 	private bool WordWrapping {
@@ -1279,7 +1276,7 @@ public class FGTextEditor
 		{
 			_softLineBreaks = null;
 			yLineOffsets = null;
-			//tokenWidths.Clear();
+			tokenWidths.Clear();
 
 			if (isText)
 				resetTextFont = false;
@@ -1358,10 +1355,9 @@ public class FGTextEditor
 		styles.hyperlinkStyle = styles.hyperlinkStyle ?? new GUIStyle(styles.normalStyle);
 		styles.mailtoStyle = styles.mailtoStyle ?? new GUIStyle(styles.hyperlinkStyle);
 		styles.keywordStyle = styles.keywordStyle ?? new GUIStyle(styles.normalStyle);
-		styles.controlKeywordStyle = styles.controlKeywordStyle ?? new GUIStyle(styles.normalStyle);
 		styles.constantStyle = styles.constantStyle ?? new GUIStyle(styles.normalStyle);
 		styles.stringStyle = styles.stringStyle ?? new GUIStyle(styles.normalStyle);
-		styles.builtInLiteralsStyle = styles.builtInLiteralsStyle ?? new GUIStyle(styles.normalStyle);
+		styles.builtInLiteralsStyle = styles.builtInLiteralsStyle ?? new GUIStyle(styles.keywordStyle);
 		styles.operatorStyle = styles.operatorStyle ?? new GUIStyle(styles.normalStyle);
 		styles.punctuatorStyle = styles.punctuatorStyle ?? new GUIStyle(styles.normalStyle);
 		styles.referenceTypeStyle = styles.referenceTypeStyle ?? new GUIStyle(styles.normalStyle);
@@ -1392,7 +1388,6 @@ public class FGTextEditor
 		styles.hyperlinkStyle.font = styles.normalStyle.font;
 		styles.mailtoStyle.font = styles.normalStyle.font;
 		styles.keywordStyle.font = styles.normalStyle.font;
-		styles.controlKeywordStyle.font = styles.normalStyle.font;
 		styles.constantStyle.font = styles.normalStyle.font;
 		styles.stringStyle.font = styles.normalStyle.font;
 		styles.builtInLiteralsStyle.font = styles.normalStyle.font;
@@ -1429,7 +1424,6 @@ public class FGTextEditor
 			styles.hyperlinkStyle.fontSize = styles.normalStyle.fontSize;
 			styles.mailtoStyle.fontSize = styles.normalStyle.fontSize;
 			styles.keywordStyle.fontSize = styles.normalStyle.fontSize;
-			styles.controlKeywordStyle.fontSize = styles.normalStyle.fontSize;
 			styles.constantStyle.fontSize = styles.normalStyle.fontSize;
 			styles.stringStyle.fontSize = styles.normalStyle.fontSize;
 			styles.builtInLiteralsStyle.fontSize = styles.normalStyle.fontSize;
@@ -1466,7 +1460,6 @@ public class FGTextEditor
 			styles.hyperlinkStyle.fontSize = 0;
 			styles.mailtoStyle.fontSize = 0;
 			styles.keywordStyle.fontSize = 0;
-			styles.controlKeywordStyle.fontSize = 0;
 			styles.constantStyle.fontSize = 0;
 			styles.stringStyle.fontSize = 0;
 			styles.builtInLiteralsStyle.fontSize = 0;
@@ -1580,7 +1573,6 @@ public class FGTextEditor
 		
 		styles.normalStyle.normal.textColor = currentTheme.text;
 		styles.keywordStyle.normal.textColor = currentTheme.keywords;
-		styles.controlKeywordStyle.normal.textColor = currentTheme.controlKeywords;
 		styles.constantStyle.normal.textColor = currentTheme.constants;
 		styles.stringStyle.normal.textColor = currentTheme.strings;
 		styles.builtInLiteralsStyle.normal.textColor = currentTheme.builtInLiterals;
@@ -1628,7 +1620,6 @@ public class FGTextEditor
 		styles.commentStyle.fontStyle = isDynamic ? (FontStyle)((int)currentTheme.commentsStyle & boldFilter) : 0;
 		styles.stringStyle.fontStyle = isDynamic ? (FontStyle)((int)currentTheme.stringsStyle & boldFilter) : 0;
 		styles.keywordStyle.fontStyle = isDynamic ? (FontStyle)((int)currentTheme.keywordsStyle & boldFilter) : 0;
-		styles.controlKeywordStyle.fontStyle = isDynamic ? (FontStyle)((int)currentTheme.keywordsStyle & boldFilter) : 0;
 		styles.constantStyle.fontStyle = isDynamic ? (FontStyle)((int)currentTheme.constantsStyle & boldFilter) : 0;
 		styles.referenceTypeStyle.fontStyle = isDynamic ? (FontStyle)((int)currentTheme.typesStyle & boldFilter) : 0;
 		styles.valueTypeStyle.fontStyle = isDynamic ? (FontStyle)((int)currentTheme.typesStyle & boldFilter) : 0;
@@ -2151,7 +2142,8 @@ public class FGTextEditor
 		if (Event.current.type == EventType.Repaint)
 			lastCodeViewRect = codeViewRect;
 		
-		if (caretPosition != matchedBracesAtCaretPosition || scrollToCaret || caretMoveTime == frameTime)
+		if (caretPosition != matchedBracesAtCaretPosition ||
+			scrollToCaret || caretMoveTime == frameTime)
 		{
 			if (showingArgumentsForMethod != null)
 			{
@@ -2322,37 +2314,30 @@ public class FGTextEditor
 			return NO_SOFT_LINE_BREAKS;
 
 		var lineBreaks = _softLineBreaks[line] = NO_SOFT_LINE_BREAKS;
-		var maxWidth = codeViewRect.width;
-		maxWidth = maxWidth < 8f * charSize.x ? 8f * charSize.x : maxWidth;
+		int maxWidth = (int) (codeViewRect.width / charSize.x);
+		maxWidth = maxWidth < 8 ? 8 : maxWidth;
 
-		//var tabSize = SISettings.tabSize;
-		//lastTabSize = tabSize;
+		var tabSize = SISettings.tabSize;
+		lastTabSize = tabSize;
 		needsReformat = false;
 
 		int charIndex = 0;
-		//int column = 0;
-		var xOffset = 0f;
+		int column = 0;
 		foreach (var token in formatedLine.tokens)
 		{
 			if (token == null)
 				continue;
 
 			//var tokenEndColumn = column;
-			if (token.tokenKind > SyntaxToken.Kind.InterpolatedStringEndLiteral
-				&& token.tokenKind < SyntaxToken.Kind.StringLiteral
-				|| token.tokenKind > SyntaxToken.Kind.InterpolatedStringEndLiteral)
+			if (token.tokenKind > SyntaxToken.Kind.LastWSToken)
 			{
-				// Non-breakable token
+				// Token with no whitespaces
 
 				var tokenLength = token.text.Length;
-				if (tokenLength == 0)
-					continue;
-				
-				var tokenWidth = GetTextWidth(line, charIndex, charIndex + tokenLength, xOffset);
-				if (xOffset + tokenWidth < maxWidth)
+				if (column + tokenLength < maxWidth)
 				{
 					charIndex += tokenLength;
-					xOffset += tokenWidth;
+					column += tokenLength;
 					continue;
 				}
 
@@ -2361,42 +2346,39 @@ public class FGTextEditor
 				if (lineBreaks == NO_SOFT_LINE_BREAKS)
 					_softLineBreaks[line] = lineBreaks = new List<int>();
 
-				if (xOffset > 0f)
+				if (column > 0)
 				{
 					lineBreaks.Add(charIndex);
-					//xOffset = 0f;
+					column = 0;
 				}
 
-				if (tokenWidth > maxWidth)
+				if (tokenLength > maxWidth)
 				{
 					// Doesn't fit in a single row
-					int rowWidth = (int)(maxWidth / charSize.x);
-					
-					int i;
-					for (i = rowWidth; i < tokenLength; i += rowWidth)
+
+					for (var i = maxWidth; i < tokenLength; i += maxWidth)
 						lineBreaks.Add(charIndex + i);
-					xOffset = GetTextWidth(line, charIndex + i, charIndex + tokenLength, 0f);
+					column = tokenLength % maxWidth;
 				}
 				else
 				{
-					xOffset = tokenWidth;
+					column = tokenLength;
 				}
 
 				charIndex += tokenLength;
 			}
 			else
 			{
-				// Breakable token or whitespaces
+				// May contain whitespaces
 
-				var lastLineBreak = xOffset > 0f ? -1 : 0;
+				var lastLineBreak = column > 0 ? -1 : 0;
 				var lastWhitespace = -1;
 				for (var i = 0; i < token.text.Length; ++i)
 				{
-					xOffset += GetTextWidth(line, charIndex + i, charIndex + i + 1, xOffset);
-					//column += token.text[i] != '\t' ? 1 : tabSize - (column % tabSize);
+					column += token.text[i] != '\t' ? 1 : tabSize - (column % tabSize);
 					if (token.text[i] == ' ' || token.text[i] == '\t')
 						lastWhitespace = i;
-					if (xOffset >= maxWidth)
+					if (column >= maxWidth)
 					{
 						if (lineBreaks == NO_SOFT_LINE_BREAKS)
 							lineBreaks = _softLineBreaks[line] = new List<int>();
@@ -2416,8 +2398,7 @@ public class FGTextEditor
 						{
 							lineBreaks.Add(charIndex);
 						}
-						xOffset = GetTextWidth(line, charIndex + lastLineBreak, charIndex + i, 0f);
-						//column = i - lastLineBreak;
+						column = i - lastLineBreak;
 					}
 				}
 
@@ -2589,14 +2570,16 @@ public class FGTextEditor
 		
 				if (showHorizontal && horizontalScrollbar != GUIStyle.none)
 				{
-					var rect = new Rect(
-						position.x,
-						position.yMax - horizontalScrollbar.fixedHeight,
-						screenRect.width,
-						horizontalScrollbar.fixedHeight);
-					var size = Mathf.Min(screenRect.width, viewRect.width);
-					var value = Mathf.Clamp(scrollPosition.x, 0f, viewRect.width - size);
-					scrollPosition.x = GUI.HorizontalScrollbar(rect, value, size, 0f, viewRect.width);
+					scrollPosition.x = GUI.HorizontalScrollbar(
+						new Rect(
+							position.x,
+							position.yMax - horizontalScrollbar.fixedHeight,
+							screenRect.width,
+							horizontalScrollbar.fixedHeight),
+						scrollPosition.x,
+						Mathf.Min(screenRect.width, viewRect.width),
+						0f,
+						viewRect.width);
 				}
 				else
 				{
@@ -2615,17 +2598,14 @@ public class FGTextEditor
 		
 				if (showVertical && verticalScrollbar != GUIStyle.none)
 				{
-					var rect = new Rect(
-						screenRect.xMax + (float)verticalScrollbar.margin.left,
-						screenRect.y,
-						verticalScrollbar.fixedWidth,
-						screenRect.height);
-					var size = Mathf.Min(screenRect.height, viewRect.height);
-					var value = Mathf.Clamp(scrollPosition.y, 0f, viewRect.height - size);
 					scrollPosition.y = GUI.VerticalScrollbar(
-						rect,
-						value,
-						size,
+						new Rect(
+							screenRect.xMax + (float)verticalScrollbar.margin.left,
+							screenRect.y,
+							verticalScrollbar.fixedWidth,
+							screenRect.height),
+						scrollPosition.y,
+						Mathf.Min(screenRect.height, viewRect.height),
 						0f,
 						viewRect.height);
 				}
@@ -3189,7 +3169,7 @@ public class FGTextEditor
 				}
 				else
 				{
-					rcCaret = tokenAtCursor != null ? GetTokenRect(tokenAtCursor) : GetCaretRect(caretPosition);
+					rcCaret = tokenAtCursor != null ? GetTokenRect(tokenAtCursor) : GetCaretRect();
 					rcCaret.x += scrollViewRect.x - scrollPosition.x;
 					rcCaret.y += 4f + scrollViewRect.y - scrollPosition.y;
 					if (tokenAtCursor != null)
@@ -3253,12 +3233,11 @@ public class FGTextEditor
 			}
 		}
 
-		widestLine = Mathf.Round(Mathf.Max(widestLine, textBuffer.longestLine * charSize.x));
-		var contentWidth = Mathf.Max(contentRect.width - 8f, widestLine);
+		var contentWidth = charSize.x * textBuffer.longestLine;
 		float contentHeight = wordWrapping ? GetLineOffset(textBuffer.lines.Count) + 8f
 			: 8f + charSize.y * textBuffer.formatedLines.Length;
-		
-		contentRect.Set(-4f, -4f, contentWidth + 8f, contentHeight);
+			
+		contentRect.Set(-4, -4, contentWidth + 8f, contentHeight);
 
 		var lineNumbersWidth = 0f;
 		var lineNumbersMaxLength = 0;
@@ -3313,13 +3292,10 @@ public class FGTextEditor
 		if (scrollToCaret && Event.current.type != EventType.Layout)
 		{
 			scrollToCaret = false;
-			var caretPos = codeViewDragging && mouseDownOnSelection ? mouseDropPosition : caretPosition;
-			//var caretRect = GetCaretRect(caretPos);
+			FGTextBuffer.CaretPos caretPos = codeViewDragging && mouseDownOnSelection ? mouseDropPosition : caretPosition;
 
 //			if (showLineNumbers || trackChanges)
 //				contentRect.xMax += marginLeft;
-
-			/*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/
 
 			codeViewRect.x = scrollPosition.x + marginLeft;
 			codeViewRect.y = scrollPosition.y;
@@ -3383,15 +3359,10 @@ public class FGTextEditor
 
 			if (!wordWrapping)
 			{
-				var caretRect = GetCaretRect(caretPos);
-				caretRect.x -= marginLeft;
-
-				/*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/
-
-				if (caretRect.x < scrollPosition.x)
+				if (caretPos.column * charSize.x < scrollPosition.x)
 				{
 					var oldX = scrollPosition.x;
-					scrollPosition.x = Mathf.Round(Mathf.Max(0f, caretRect.x - 20f * charSize.x));
+					scrollPosition.x = Mathf.Max(0, (caretPos.column - 20) * charSize.x);
 					if (oldX != scrollPosition.x)
 					{
 						needsRepaint = true;
@@ -3404,10 +3375,10 @@ public class FGTextEditor
 						}
 					}
 				}
-				else if (caretRect.x + charSize.x > scrollPosition.x + scrollViewRect.width - marginLeft - 22f)
+				else if (((caretPos.column + 1) * charSize.x) > (scrollPosition.x + scrollViewRect.width - marginLeft - 22f))
 				{
 					var oldX = scrollPosition.x;
-					scrollPosition.x = Mathf.Max(0f, caretRect.x + 21f * charSize.x - scrollViewRect.width + marginLeft + 22f);
+					scrollPosition.x = Mathf.Max(0f, (caretPos.column + 21) * charSize.x - scrollViewRect.width + marginLeft + 22f);
 					if (oldX != scrollPosition.x)
 					{
 						needsRepaint = true;
@@ -3517,8 +3488,8 @@ public class FGTextEditor
 			return;
 		}
 
-		//if (marginLeft > 0f)
-		//	contentRect.xMax += marginLeft + marginRight;
+		if (marginLeft > 0f)
+			contentRect.xMax += marginLeft + marginRight;
 
 		// Filling the background
 		GUI.Box(scrollViewRect, GUIContent.none, styles.scrollViewStyle);
@@ -3832,13 +3803,13 @@ public class FGTextEditor
 				if (selectionStartPosition.line == caretPosition.line)
 				{
 					// Single line selection
-					//if (wordWrapping)
+					if (wordWrapping)
 						DrawSelectionRectCharIndex(caretPosition.line,
 							Math.Min(caretPosition.characterIndex, selectionStartPosition.characterIndex),
 							Math.Abs(caretPosition.characterIndex - selectionStartPosition.characterIndex), false, null);
-					//else
-					//	DrawSelectionRect(caretPosition.line, Math.Min(caretPosition.column, selectionStartPosition.column),
-					//		Math.Abs(caretPosition.column - selectionStartPosition.column));
+					else
+						DrawSelectionRect(caretPosition.line, Math.Min(caretPosition.column, selectionStartPosition.column),
+							Math.Abs(caretPosition.column - selectionStartPosition.column));
 				}
 				else
 				{
@@ -3848,18 +3819,18 @@ public class FGTextEditor
 					int firstLine = fromPos.line;
 					int lastLine = toPos.line;
 
-					//if (wordWrapping)
-					//{
+					if (wordWrapping)
+					{
 						DrawSelectionRectCharIndex(firstLine, fromPos.characterIndex,
 							textBuffer.lines[firstLine].Length - fromPos.characterIndex, true, null);
 						DrawSelectionRectCharIndex(lastLine, 0, toPos.characterIndex, false, null);
-					//}
-					//else
-					//{
-					//	DrawSelectionRect(firstLine, fromPos.characterIndex,
-					//		textBuffer.CharIndexToColumn(textBuffer.lines[firstLine].Length, firstLine) - fromPos.column + 1);
-					//	DrawSelectionRect(lastLine, 0, toPos.column);
-					//}
+					}
+					else
+					{
+						DrawSelectionRect(firstLine, fromPos.column,
+							textBuffer.CharIndexToColumn(textBuffer.lines[firstLine].Length, firstLine) - fromPos.column + 1);
+						DrawSelectionRect(lastLine, 0, toPos.column);
+					}
 
 					++firstLine;
 					--lastLine;
@@ -3892,10 +3863,9 @@ public class FGTextEditor
 			}
 		}
 
-		SyntaxToken tempToken = null;
+		List<SyntaxToken> tempTokens = null;
 		Rect rect = new Rect();
-		rect.height = charSize.y;
-		rect.y = GetLineOffset(fromLine) - charSize.y;
+		rect.y = wordWrapping ? GetLineOffset(fromLine) - charSize.y : (fromLine - 1) * charSize.y;
 		for (int i = fromLine; i < toLine; ++i)
 		{
 			if (!IsLineVisible(i))
@@ -3907,136 +3877,138 @@ public class FGTextEditor
 			
 			rect.x = marginLeft;
 			rect.y += charSize.y;
+			rect.height = charSize.y;
 
 			FGTextBuffer.FormatedLine line = textBuffer.formatedLines[i];
 
 			var charIndex = 0;
+			var startAtColumn = 0;
 			var tokens = line.tokens;
 			if (tokens == null)
 			{
-				if (tempToken == null)
-					tempToken = new SyntaxToken(SyntaxToken.Kind.PreprocessorArguments, textBuffer.lines[i]);
+				if (tempTokens == null)
+					tempTokens = new List<SyntaxToken> { new SyntaxToken(SyntaxToken.Kind.PreprocessorArguments, FGTextBuffer.ExpandTabs(textBuffer.lines[i], 0)) };
 				else
-					tempToken.text = textBuffer.lines[i];
+					tempTokens[0].text = FGTextBuffer.ExpandTabs(textBuffer.lines[i], 0);
+				tokens = tempTokens;
 			}
 
 			softLineBreaks = GetSoftLineBreaks(i);
-			int numBreaks = softLineBreaks.Count;
-			//if (false && numBreaks == 0)
-			//{
-			//	for (var j = 0; j < tokens.Count; ++j)
-			//	{
-			//		var token = tokens[j];
-					
-			//		if (token == null)
-			//			continue;
-
-			//		var tokenText = token.text;
-
-			//		charIndex += tokenText.Length;
-			//		var endAtColumn = textBuffer.CharIndexToColumn(charIndex, i);
-			//		rect.width = GetCharXOffset(charIndex, i, 0) - rect.x;
-			//		//rect.width = charSize.x * (endAtColumn - startAtColumn);
-					
-			//		if (token.tokenKind > SyntaxToken.Kind.Whitespace)
-			//		{
-			//			float tokenWidth = GetTextWidth(tokenText);
-			//			if (tokenWidth > rect.width)
-			//				rect.width = tokenWidth;
-			//		}
-					
-			//		var lastStartAtColumn = startAtColumn;
-			//		startAtColumn = endAtColumn;
-
-			//		if (token.tokenKind != SyntaxToken.Kind.Whitespace)
-			//		{
-			//			if (token.tokenKind < SyntaxToken.Kind.LastWSToken)
-			//				tokenText = FGTextBuffer.ExpandTabs(tokenText, lastStartAtColumn);
-						
-			//			if (token.tokenKind == SyntaxToken.Kind.Missing)
-			//			{
-			//				if (Event.current.type == EventType.Repaint)
-			//				{
-			//					var rcMissing = new Rect(rect.xMax, rect.yMin, charSize.x * 2f, charSize.y);
-			//					DrawWavyUnderline(rcMissing, new Color(1f, 0f, 0f, .8f));
-			//				}
-			//			}
-			//			else if (token.style == styles.hyperlinkStyle || token.style == styles.mailtoStyle)
-			//			{
-			//				if (GUI.Button(rect, tokenText, token.style))
-			//				{
-			//					if (token.style == styles.hyperlinkStyle)
-			//						Application.OpenURL(token.text);
-			//					else
-			//						Application.OpenURL("mailto:" + token.text);
-			//				}
-							
-			//				if (Event.current.type == EventType.Repaint)
-			//				{
-			//					// show the "Link" cursor when the mouse is hovering over this rectangle.
-			//					EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
-			//				}
-			//			}
-			//			else
-			//			{
-			//				token.style = GetTokenStyle(token);
-							
-			//				// Highlighting references
-			//				if (!hasSelection && pingTimer == 0f && SISettings.referenceHighlighting)
-			//				{
-			//					if (highlightedSymbol != null)
-			//					{
-			//						if (token.parent != null && token.parent.resolvedSymbol != null &&
-			//							token.parent.resolvedSymbol.GetGenericSymbol() == highlightedSymbol)
-			//						{
-			//							var referenceStyle = GetReferenceHighlightStyle(token);
-			//							GUI.Label(rect, GUIContent.none, referenceStyle);
-			//						}
-			//					}
-			//					else if (highlightedPPSymbol != null)
-			//					{
-			//						if (token.tokenKind == SyntaxToken.Kind.PreprocessorSymbol && token.text == highlightedPPSymbol)
-			//						{
-			//							var referenceStyle = GetReferenceHighlightStyle(token);
-			//							GUI.Label(rect, GUIContent.none, referenceStyle);
-			//						}
-			//					}
-			//				}
-							
-			//				if (Event.current.type == EventType.Repaint)
-			//				{
-			//					var errorNode = token.parent;
-			//					if (errorNode != null && token.tokenKind != SyntaxToken.Kind.Missing)
-			//					{
-			//						if (errorNode.syntaxError != null)
-			//						{
-			//							DrawWavyUnderline(rect, new Color(1f, 0f, 0f, .8f));
-			//						}
-			//						else if (errorNode.semanticError != null ||
-			//							errorNode.resolvedSymbol != null && errorNode.resolvedSymbol.kind == SymbolKind.Error)
-			//						{
-			//							DrawWavyUnderline(rect, new Color(1f, 0f, 1f, .8f));
-			//						}
-			//					}
-			//				}
-							
-			//				if (Event.current.type == EventType.Repaint)
-			//					token.style.Draw(rect, tokenText, false, false, false, false);
-			//				//GUI.Label(rect, tokenText, token.style);
-			//			}
-			//		}
-
-			//		rect.xMin = rect.xMax;
-			//	}
-			//}
-			//else
+			int numBreaks = wordWrapping /*&& !IsLoading*/ ? softLineBreaks.Count : 0;
+			if (numBreaks == 0)
 			{
-				//int column = 0;
-				int softRow = 0;
-				int numTokens = tokens == null ? 1 : tokens.Count;
-				for (var j = 0; j < numTokens; ++j)
+				for (var j = 0; j < tokens.Count; ++j)
 				{
-					var token = tokens == null ? tempToken : tokens[j];
+					var token = tokens[j];
+					
+					if (token == null)
+						continue;
+
+					var tokenText = token.text;
+					
+					float tokenWidth;
+					if (!tokenWidths.TryGetValue(tokenText, out tokenWidth))
+					{
+						tempContent.text = tokenText;
+						tokenWidth = styles.normalStyle.CalcSize(tempContent).x;
+						tokenWidths[tokenText] = tokenWidth;
+					}
+
+					charIndex += tokenText.Length;
+					var endAtColumn = textBuffer.CharIndexToColumn(charIndex, i);
+					rect.width = charSize.x * (endAtColumn - startAtColumn);
+					
+					var lastStartAtColumn = startAtColumn;
+					startAtColumn = endAtColumn;
+
+					if (token.tokenKind != SyntaxToken.Kind.Whitespace)
+					{
+						if (token.tokenKind < SyntaxToken.Kind.LastWSToken)
+							tokenText = FGTextBuffer.ExpandTabs(tokenText, lastStartAtColumn);
+						
+						if (token.tokenKind == SyntaxToken.Kind.Missing)
+						{
+							if (Event.current.type == EventType.Repaint)
+							{
+								var rcMissing = new Rect(rect.xMax, rect.yMin, charSize.x * 2f, charSize.y);
+								DrawWavyUnderline(rcMissing, new Color(1f, 0f, 0f, .8f));
+							}
+						}
+						else if (token.style == styles.hyperlinkStyle || token.style == styles.mailtoStyle)
+						{
+							if (GUI.Button(rect, tokenText, token.style))
+							{
+								if (token.style == styles.hyperlinkStyle)
+									Application.OpenURL(token.text);
+								else
+									Application.OpenURL("mailto:" + token.text);
+							}
+							
+							if (Event.current.type == EventType.Repaint)
+							{
+								// show the "Link" cursor when the mouse is hovering over this rectangle.
+								EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
+							}
+						}
+						else
+						{
+							token.style = GetTokenStyle(token);
+							
+							// Highlighting references
+							if (!hasSelection && pingTimer == 0f && SISettings.referenceHighlighting)
+							{
+								if (highlightedSymbol != null)
+								{
+									if (token.parent != null && token.parent.resolvedSymbol != null &&
+										token.parent.resolvedSymbol.GetGenericSymbol() == highlightedSymbol)
+									{
+										var referenceStyle = GetReferenceHighlightStyle(token);
+										GUI.Label(rect, GUIContent.none, referenceStyle);
+									}
+								}
+								else if (highlightedPPSymbol != null)
+								{
+									if (token.tokenKind == SyntaxToken.Kind.PreprocessorSymbol && token.text == highlightedPPSymbol)
+									{
+										var referenceStyle = GetReferenceHighlightStyle(token);
+										GUI.Label(rect, GUIContent.none, referenceStyle);
+									}
+								}
+							}
+							
+							if (Event.current.type == EventType.Repaint)
+							{
+								var errorNode = token.parent;
+								if (errorNode != null && token.tokenKind != SyntaxToken.Kind.Missing)
+								{
+									if (errorNode.syntaxError != null)
+									{
+										DrawWavyUnderline(rect, new Color(1f, 0f, 0f, .8f));
+									}
+									else if (errorNode.semanticError != null ||
+										errorNode.resolvedSymbol != null && errorNode.resolvedSymbol.kind == SymbolKind.Error)
+									{
+										DrawWavyUnderline(rect, new Color(1f, 0f, 1f, .8f));
+									}
+								}
+							}
+							
+							if (Event.current.type == EventType.Repaint)
+								token.style.Draw(rect, tokenText, false, false, false, false);
+							//GUI.Label(rect, tokenText, token.style);
+						}
+					}
+
+					rect.xMin = rect.xMax;
+				}
+			}
+			else
+			{
+				int column = 0;
+				int softRow = 0;
+				for (var j = 0; j < tokens.Count; ++j)
+				{
+					var token = tokens[j];
 					
 					if (token == null)
 						continue;
@@ -4061,23 +4033,19 @@ public class FGTextEditor
 
 						if (charsToDraw > 0)
 						{
-							var tokenTextPart = token.text.Substring(tokenTextStart, charsToDraw);
+							var tokenText = tokenTextStart == 0 && tokenTextLength == charsToDraw ?
+							  token.text : token.text.Substring(tokenTextStart, charsToDraw);
 							
-							/*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/ /*test: 蔵岡 恒一郎 / Koichiro Kuraoka*/
-					
 							charIndex += charsToDraw;
-							rect.width = marginLeft + GetCharXOffset(charIndex, i, rowStart) - rect.x;
-							//var endAtColumn = textBuffer.CharIndexToColumn(charIndex, i, rowStart);
-							//rect.width = charSize.x * (endAtColumn - column);
+							var endAtColumn = textBuffer.CharIndexToColumn(charIndex, i, rowStart);
+							rect.width = charSize.x * (endAtColumn - column);
 							
-							//tokenText = FGTextBuffer.ExpandTabs(tokenText, 0);
-							//column = endAtColumn;
+							tokenText = FGTextBuffer.ExpandTabs(tokenText, column);
+							column = endAtColumn;
 							
-							token.style = GetTokenStyle(token);
-								
 							if (token.style == styles.hyperlinkStyle || token.style == styles.mailtoStyle)
 							{
-								if (GUI.Button(rect, tokenTextPart, token.style))
+								if (GUI.Button(rect, tokenText, token.style))
 								{
 									if (token.style == styles.hyperlinkStyle)
 										Application.OpenURL(token.text);
@@ -4087,12 +4055,14 @@ public class FGTextEditor
 								
 								if (Event.current.type == EventType.Repaint)
 								{
-									// show the "Link" cursor when the mouse is hovering over this rectangle.
+								// show the "Link" cursor when the mouse is hovering over this rectangle.
 									EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
 								}
 							}
 							else
 							{
+								token.style = GetTokenStyle(token);
+								
 								// Highlighting references
 								if (!hasSelection && pingTimer == 0f && SISettings.referenceHighlighting)
 								{
@@ -4130,39 +4100,11 @@ public class FGTextEditor
 											DrawWavyUnderline(rect, new Color(1f, 0f, 1f, .8f));
 										}
 									}
-
-									// Draw tokenTextPart text
-									
-									int indexOfTab;
-									var text = tokenTextPart;
-									while (text != "")
-									{
-										indexOfTab = text.IndexOf('\t');
-										if (indexOfTab < 0)
-										{
-											token.style.Draw(rect, text, false, false, false, false);
-											break;
-										}
-										if (indexOfTab > 0)
-										{
-											var textToTab = text.Substring(0, indexOfTab);
-											token.style.Draw(rect, textToTab, false, false, false, false);
-										}
-										do
-										{
-											++indexOfTab;
-										} while (indexOfTab < text.Length && text[indexOfTab] == '\t');
-										if (indexOfTab < text.Length)
-										{
-											text = text.Substring(indexOfTab);
-											rect.xMin = marginLeft + GetCharXOffset(charIndex - text.Length, i, rowStart);
-										}
-										else
-										{
-											break;
-										}
-									}
 								}
+								
+								if (Event.current.type == EventType.Repaint)
+									token.style.Draw(rect, tokenText, false, false, false, false);
+								//GUI.Label(rect, tokenText, token.style);
 							}
 						}
 
@@ -4175,13 +4117,12 @@ public class FGTextEditor
 							rect.width = 0f;
 							rect.y += charSize.y;
 							++softRow;
+							column = 0;
 						}
 					}
 	
 					rect.xMin = rect.xMax;
 				}
-				
-				widestLine = Mathf.Ceil(Mathf.Max(widestLine, rect.xMax));
 
 				//Debug.Log("Line " + i + " " + sb.ToString());
 			}
@@ -4263,16 +4204,26 @@ public class FGTextEditor
 			isCaretOn = caretTime < 0.5f;
 			if ((isCaretOn || pingTimer > 0f && pingStartTime != default(System.DateTime)) && position.line >= fromLine && position.line < toLine)
 			{
-				var caretRect = GetCaretRect(position);
+				int row;
+				int column;
+				BufferToViewPosition(position, out row, out column);
+				Rect caretRect = new Rect(
+					charSize.x * column + marginLeft,
+					charSize.y * row + GetLineOffset(position.line),
+					1,
+					charSize.y);
+				if (SISettings.showThickerCaret)
+					caretRect.xMin -= 1f;
 				GUI.Label(caretRect, GUIContent.none, isCaretOn ? styles.caretStyle : styles.scrollViewStyle);
 			}
 			
-			//if (Input.compositionString != "" && selectionStartPosition != null)
-			//{
-			//	var caretRect = GetCaretRect(selectionStartPosition);
-			//	var caretPos = new Vector2(caretRect.x, caretRect.y + charSize.y);
-			//	Input.compositionCursorPos = caretPos;//EditorGUIUtility.GUIToScreenPoint(caretPos);
-			//}
+			if (Input.compositionString != "" && selectionStartPosition != null)
+			{
+				int row;
+				int column;
+				BufferToViewPosition(selectionStartPosition, out row, out column);
+				Input.compositionCursorPos = new Vector2(charSize.x * column + marginLeft + 4f, charSize.y * row + GetLineOffset(position.line) + charSize.y + 36f) - scrollPosition;
+			}
 		}
 
 		if (Event.current.type == EventType.Repaint)
@@ -4405,6 +4356,7 @@ public class FGTextEditor
 		if (Event.current.type == EventType.Repaint && pingTimer > 0f && pingStartTime != default(System.DateTime))
 		{
 			int row;
+			
 			int column;
 			BufferToViewPosition(caretPosition, out row, out column);
 			var rcPing = scrollToRect;
@@ -4428,17 +4380,6 @@ public class FGTextEditor
 		tryArgumentsHint = false;
 		
 		EndScrollView();
-
-
-		if (hasCodeViewFocus && Event.current.type == EventType.Repaint && CanEdit())
-		{
-			//if (Input.compositionString != "" && selectionStartPosition != null)
-			{
-				var caretRect = GetCaretRect(caretPosition);
-				var caretPos = new Vector2(caretRect.x, caretRect.y + charSize.y + 7f) - scrollPosition + scrollViewRect.min;
-				Input.compositionCursorPos = EditorGUIUtility.pixelsPerPoint * caretPos;
-			}
-		}
 	}
 	
 	private GUIStyle GetTokenStyle(SyntaxToken token)
@@ -4512,7 +4453,6 @@ public class FGTextEditor
 					case SymbolKind.ForEachVariable:
 					case SymbolKind.FromClauseVariable:
 					case SymbolKind.Variable:
-					case SymbolKind.OutVariable:
 					case SymbolKind.LocalConstant:
 						tokenStyle = textBuffer.styles.variableStyle;
 						break;
@@ -4558,23 +4498,61 @@ public class FGTextEditor
 		GUI.color = oldColor;
 	}
 
+	private void DrawSelectionRect(int line, int startColumn, int numColumns)
+	{
+		if (!wordWrapping)
+		{
+			Rect selectionRect = new Rect(charSize.x * startColumn + marginLeft, charSize.y * line, charSize.x * numColumns, charSize.y);
+			GUI.Label(selectionRect, GUIContent.none, hasCodeViewFocus ? styles.activeSelectionStyle : styles.passiveSelectionStyle);
+
+			if (!codeViewDragging)
+			{
+				// show the "Arrow" cursor when the mouse is hovering over this rectangle.
+				EditorGUIUtility.AddCursorRect(selectionRect, MouseCursor.MoveArrow);
+			}
+		}
+		else
+		{
+			float yOffset = GetLineOffset(line);
+
+			List<int> softLineBreaks = GetSoftLineBreaks(line);
+			int row = FindFirstIndexGreaterThanOrEqualTo<int>(softLineBreaks, startColumn);
+			if (row < softLineBreaks.Count && startColumn == softLineBreaks[row])
+				++row;
+
+			int rowStart = row > 0 ? softLineBreaks[row - 1] : 0;
+			startColumn -= rowStart;
+			while (numColumns > 0)
+			{
+				int rowLength = (row < softLineBreaks.Count ? softLineBreaks[row] - rowStart : startColumn + numColumns);
+				int nCols = Math.Min(numColumns, rowLength - startColumn);
+
+				Rect selectionRect = new Rect(charSize.x * startColumn + marginLeft, yOffset + charSize.y * row, charSize.x * nCols, charSize.y);
+				GUI.Label(selectionRect, GUIContent.none, hasCodeViewFocus ? styles.activeSelectionStyle : styles.passiveSelectionStyle);
+				if (!codeViewDragging)
+					EditorGUIUtility.AddCursorRect(selectionRect, MouseCursor.MoveArrow);
+
+				numColumns -= nCols;
+				rowStart += rowLength;
+				startColumn = 0;
+				++row;
+			}
+		}
+	}
+
 	private void DrawSelectionRectCharIndex(int line, int startCharIndex, int numChars, bool newLine, GUIStyle style)
 	{
 		if (style == null)
 			style = hasCodeViewFocus ? styles.activeSelectionStyle : styles.passiveSelectionStyle;
-		var addCursorRect = !codeViewDragging && style == styles.activeSelectionStyle;
 
 		if (!wordWrapping)
 		{
-			var yOffset = GetLineOffset(line);
-			var fromXOffset = GetCharXOffset(startCharIndex, line, 0);
-			var toXOffset = GetCharXOffset(startCharIndex + numChars, line, 0);
-			if (newLine)
-				toXOffset += charSize.x;
-			var selectionRect = new Rect(fromXOffset + marginLeft, yOffset, toXOffset - fromXOffset, charSize.y);
+			var fromColumn = textBuffer.CharIndexToColumn(startCharIndex, line);
+			var toColumn = textBuffer.CharIndexToColumn(startCharIndex + numChars, line) + (newLine ? 1 : 0);
+			var selectionRect = new Rect(charSize.x * fromColumn + marginLeft, charSize.y * line, charSize.x * (toColumn - fromColumn), charSize.y);
 			GUI.Label(selectionRect, GUIContent.none, style);
 
-			if (addCursorRect)
+			if (!codeViewDragging)
 			{
 				// show the "Arrow" cursor when the mouse is hovering over this rectangle.
 				EditorGUIUtility.AddCursorRect(selectionRect, MouseCursor.MoveArrow);
@@ -4592,15 +4570,16 @@ public class FGTextEditor
 
 			if (newLine && numChars == 0 && startCharIndex == textBuffer.lines[line].Length)
 			{
-				var xOffset = GetCharXOffset(startCharIndex, line, rowStart);
-				var selectionRect = new Rect(xOffset + marginLeft, yOffset + row * charSize.y, charSize.x, charSize.y);
+				var fromColumn = textBuffer.CharIndexToColumn(startCharIndex, line, rowStart);
+				//var toColumn = fromColumn + 1;
+				var selectionRect = new Rect(charSize.x * fromColumn + marginLeft, yOffset + row * charSize.y, charSize.x, charSize.y);
 				GUI.Label(selectionRect, GUIContent.none, style);
-				if (addCursorRect)
+				if (!codeViewDragging)
 					EditorGUIUtility.AddCursorRect(selectionRect, MouseCursor.MoveArrow);
 
 				return;
 			}
-			
+
 			yOffset += charSize.y * row;
 			startCharIndex -= rowStart;
 			while (numChars > 0)
@@ -4608,12 +4587,12 @@ public class FGTextEditor
 				var rowLength = (row < softLineBreaks.Count ? softLineBreaks[row] - rowStart : startCharIndex + numChars);
 				var nChars = Math.Min(numChars, rowLength - startCharIndex);
 
-				var fromXOffset = GetCharXOffset(rowStart + startCharIndex, line, rowStart);
-				var toXOffset = GetCharXOffset(rowStart + startCharIndex + nChars, line, rowStart)
-					+ (numChars == nChars && newLine ? charSize.x : 0);
-				var selectionRect = new Rect(fromXOffset + marginLeft, yOffset, toXOffset - fromXOffset, charSize.y);
+				var fromColumn = textBuffer.CharIndexToColumn(rowStart + startCharIndex, line, rowStart);
+				var toColumn = textBuffer.CharIndexToColumn(rowStart + startCharIndex + nChars, line, rowStart)
+					+ (numChars == nChars && newLine ? 1 : 0);
+				var selectionRect = new Rect(charSize.x * fromColumn + marginLeft, yOffset, charSize.x * (toColumn - fromColumn), charSize.y);
 				GUI.Label(selectionRect, GUIContent.none, style);
-				if (addCursorRect)
+				if (!codeViewDragging)
 					EditorGUIUtility.AddCursorRect(selectionRect, MouseCursor.MoveArrow);
 
 				numChars -= nChars;
@@ -4674,18 +4653,22 @@ public class FGTextEditor
 		return true;
 	}
 	
-	private Rect GetCaretRect(FGTextBuffer.CaretPos position)
+	private Rect GetCaretRect()
 	{
-		Vector2 topLeft = BufferToViewPosition(position);
-		Rect caretRect = new Rect(
-			topLeft.x + marginLeft,
-			topLeft.y + GetLineOffset(position.line),
-			1,
-			charSize.y);
-		if (SISettings.showThickerCaret)
-			caretRect.xMin -= 1f;
+		Rect result;
+		int row = caretPosition.line, column = caretPosition.characterIndex;
+		if (wordWrapping)
+		{
+			BufferToViewPosition(caretPosition, out row, out column);
+			result = new Rect(charSize.x * column + marginLeft, charSize.y * row + GetLineOffset(caretPosition.line), 1f, charSize.y);
+		}
+		else
+		{
+			column = textBuffer.CharIndexToColumn(column, row);
+			result = new Rect(charSize.x * column + marginLeft, charSize.y * row, 1f, charSize.y);
+		}
 		
-		return caretRect;
+		return result;
 	}
 	
 	private Rect GetTokenRect(SyntaxToken token)
@@ -4707,50 +4690,21 @@ public class FGTextEditor
 	
 	private Rect GetTextRect(TextSpan span)
 	{
-		var topLeftStart = BufferToViewPosition(span.line, span.index, false);
-		var width = GetTextWidth(span.line, span.index, span.index + span.indexOffset, topLeftStart.x);
-		Rect result = new Rect(topLeftStart.x + marginLeft, topLeftStart.y + GetLineOffset(span.line), width, charSize.y);
-		
-		return result;
-	}
-	
-	private float GetTextWidth(int line, int fromChar, int toChar, float xOffset)
-	{
-		var lines = textBuffer.lines;
-		if (line >= lines.Count)
-			return 0f;
-		var s = lines[line];
-		if (fromChar >= s.Length)
-			return 0f;
-		if (toChar >= s.Length)
-			toChar = s.Length;
-		if (fromChar >= toChar)
-			return 0f;
-
-		var result = 0f;
-		var tabSize = SISettings.tabSize * charSize.x;
-		for (int i = fromChar; i < toChar; ++i)
+		Rect result;
+		int row = span.line, column = span.index;
+		if (wordWrapping)
 		{
-			var charWidth = 0f;
-			var c = s[i];
-			if (c == '\t')
-				charWidth = tabSize - (xOffset % tabSize);
-			else if (c < 0x7f)
-				charWidth = charSize.x;
-			else
-			{
-				int j;
-				for (j = i+1; j < toChar; j++)
-					if (s[j] < 0x7f)
-						break;
-				
-				tempContent.text = s.Substring(i, j-i);
-				charWidth = styles.normalStyle.CalcSize(tempContent).x;
-				i = j - 1;
-			}
-			xOffset += charWidth;
-			result += charWidth;
+			BufferToViewPosition(
+				new FGTextBuffer.CaretPos { characterIndex = span.StartPosition.index, line = span.line },
+				out row, out column);
+			result = new Rect(charSize.x * column + marginLeft, charSize.y * row + GetLineOffset(span.line), charSize.x * span.indexOffset, charSize.y);
 		}
+		else
+		{
+			column = textBuffer.CharIndexToColumn(column, row);
+			result = new Rect(charSize.x * column + marginLeft, charSize.y * row, charSize.x * span.indexOffset, charSize.y);
+		}
+		
 		return result;
 	}
 	
@@ -4871,24 +4825,16 @@ public class FGTextEditor
 		}
 		x -= margin;
 
-		int clickedLine = Mathf.Clamp(GetLineAt(y), 0, textBuffer.lines.Count - 1);
-		var clickedChar = GetCharAt(x, y, clickedLine);
-		
 		var clickedColumn = Mathf.RoundToInt(x / charSize.x);
-		var mouseOverColumn = (int) (x / charSize.x);
-		int clickedCharIndex = Mathf.RoundToInt(clickedChar);
-		int mouseOverCharIndex = (int) clickedChar;
+		var mouseOverColumn = (int)(x / charSize.x);
+		int clickedLine;
+		int clickedCharIndex;
+		int mouseOverCharIndex;
 
-		//int row = (int) ((y - GetLineOffset(clickedLine)) / charSize.y);
-		//clickedPos = ViewToBufferPosition(clickedLine, row, clickedColumn);
-		clickedPos = new FGTextBuffer.CaretPos
-		{
-			characterIndex = clickedCharIndex,
-			column = clickedColumn,
-			line = clickedLine,
-			virtualColumn = clickedColumn
-		};
-		//clickedCharIndex = clickedPos.characterIndex;
+		clickedLine = Mathf.Clamp(GetLineAt(y), 0, textBuffer.lines.Count - 1);
+		int row = (int) ((y - GetLineOffset(clickedLine)) / charSize.y);
+		clickedPos = ViewToBufferPosition(clickedLine, row, clickedColumn);
+		clickedCharIndex = clickedPos.characterIndex;
 		if (mouseOverColumn == clickedColumn)
 		{
 			mouseOverPos = clickedPos;
@@ -4896,16 +4842,10 @@ public class FGTextEditor
 		}
 		else
 		{
-			mouseOverPos = new FGTextBuffer.CaretPos
-			{
-				characterIndex = mouseOverCharIndex,
-				column = mouseOverColumn,
-				line = clickedLine,
-				virtualColumn = mouseOverColumn
-			};
-			//mouseOverPos = ViewToBufferPosition(clickedLine, row, mouseOverColumn);
+			mouseOverPos = ViewToBufferPosition(clickedLine, row, mouseOverColumn);
+			mouseOverCharIndex = mouseOverPos.characterIndex;
 		}
-		//clickedColumn = clickedPos.column;
+		clickedColumn = clickedPos.column;
 
 		if (textBuffer.isCsFile
 			&& current.type == EventType.MouseMove
@@ -5885,26 +5825,7 @@ public class FGTextEditor
 				if (end < 0)
 					end = indented.Length;
 				
-				FGTextBuffer.CaretPos newSelectionStart = null;
-				var start = indented.IndexOf("$start$");
-				if (start >= 0 && start < end)
-				{
-					var part0 = indented.Substring(0, start);
-					CodeSnippets.Substitute(ref part0, codePathSymbol);
-					caretPosition = textBuffer.InsertText(caretPosition, part0);
-					if (wordWrapping)
-						caretPosition.column = caretPosition.virtualColumn = CharIndexToColumn(caretPosition.characterIndex, caretPosition.line);
-					
-					newSelectionStart = caretPosition.Clone();
-					
-					start += 7;
-				}
-				else
-				{
-					start = 0;
-				}
-				
-				var part = indented.Substring(start, end - start);
+				var part = indented.Substring(0, end);
 				CodeSnippets.Substitute(ref part, codePathSymbol);
 				caretPosition = textBuffer.InsertText(caretPosition, part);
 				if (wordWrapping)
@@ -5916,9 +5837,6 @@ public class FGTextEditor
 					CodeSnippets.Substitute(ref part, codePathSymbol);
 					textBuffer.InsertText(caretPosition, part);
 				}
-				
-				if (newSelectionStart != null)
-					selectionStartPosition = newSelectionStart;
 					
 				textBuffer.UpdateHighlighting(lineIndex, lineIndex + snippet.Count(x => x == '\n'));
 				textBuffer.EndEdit();
@@ -6192,17 +6110,18 @@ public class FGTextEditor
 		
 		if (autocompleteWindow == null)
 		{
-			Rect caretRect = GetCaretRect(caretPosition);
+			Rect caretRect;
 
-			//if (wordWrapping)
-			//{
-			//	Vector2 topLeft = BufferToViewPosition(caretPosition);
-			//	caretRect = new Rect(topLeft.x + marginLeft, topLeft.y + GetLineOffset(caretPosition.line), 1, charSize.y);
-			//}
-			//else
-			//{
-			//	caretRect = new Rect(charSize.x * caretPosition.column + marginLeft, charSize.y * caretPosition.line, 1, charSize.y);
-			//}
+			if (wordWrapping)
+			{
+				int row, column;
+				BufferToViewPosition(caretPosition, out row, out column);
+				caretRect = new Rect(charSize.x * column + marginLeft, charSize.y * row + GetLineOffset(caretPosition.line), 1, charSize.y);
+			}
+			else
+			{
+				caretRect = new Rect(charSize.x * caretPosition.column + marginLeft, charSize.y * caretPosition.line, 1, charSize.y);
+			}
 			caretRect.x += 4f + scrollViewRect.x - scrollPosition.x;
 			caretRect.y += 4f + scrollViewRect.y - scrollPosition.y;
 
@@ -6283,11 +6202,6 @@ public class FGTextEditor
 				}
 				
 				tokenSet.Remove(grammar.tokenEOF);
-				tokenSet.Remove(grammar.tokenInterpStrWhole);
-				tokenSet.Remove(grammar.tokenInterpStrStart);
-				tokenSet.Remove(grammar.tokenInterpStrMid);
-				tokenSet.Remove(grammar.tokenInterpStrEnd);
-				tokenSet.Remove(grammar.tokenInterpStrFormat);
 				if (tokenSet.Remove(grammar.tokenLiteral))
 					if (!autocompleteWindow.IdentifiersOnly)
 						data.Add(new KeywordAsSD("null"));
@@ -6393,7 +6307,6 @@ public class FGTextEditor
 										argumentIndex = 0;
 										break;
 									case "argumentList":
-									case "attributeArgumentList":
 										typeDefiningNode = currentScannerNode.parent;
 										argumentIndex = currentArgumentIndex;
 										break;
@@ -6775,104 +6688,6 @@ public class FGTextEditor
 //			column = rowLength;
 	}
 
-	public Vector2 BufferToViewPosition(FGTextBuffer.CaretPos position)
-	{
-		int row;
-		//ㅎ호ㅗ횰퓨ㅜㅎ퓨
-		var softLineBreaks = GetSoftLineBreaks(position.line);
-		row = FindFirstIndexGreaterThanOrEqualTo<int>(softLineBreaks, position.characterIndex);
-		if (row < softLineBreaks.Count && position.characterIndex == softLineBreaks[row] && position.virtualColumn == 0)
-			++row;
-
-		var rowStart = row > 0 ? softLineBreaks[row - 1] : 0;
-		float xOffset = GetCharXOffset(position.characterIndex, position.line, rowStart);
-
-		return new Vector2(xOffset, charSize.y * row);
-	}
-
-	public Vector2 BufferToViewPosition(int line, int charIndex, bool newLine)
-	{
-		int row;
-		//ㅎ호ㅗ횰퓨ㅜㅎ퓨
-		var softLineBreaks = GetSoftLineBreaks(line);
-		row = FindFirstIndexGreaterThanOrEqualTo<int>(softLineBreaks, charIndex);
-		if (row < softLineBreaks.Count && charIndex == softLineBreaks[row] && newLine)
-			++row;
-
-		var rowStart = row > 0 ? softLineBreaks[row - 1] : 0;
-		float xOffset = GetCharXOffset(charIndex, line, rowStart);
-
-		return new Vector2(xOffset, charSize.y * row);
-	}
-
-	public float GetCharXOffset(int charIndex, int line, int start)
-	{
-		var lines = textBuffer.lines;
-		if (line >= lines.Count)
-			return 0f;
-		var s = lines[line];
-		if (s.Length < charIndex)
-			charIndex = s.Length;
-
-		var tabSize = SISettings.tabSize * charSize.x;
-		var xOffset = 0f;
-		for (int i = start; i < charIndex; ++i)
-		{
-			var c = s[i];
-			if (c == ' ')
-				xOffset += charSize.x;
-			else if (c == '\t')
-				xOffset += tabSize - (xOffset % tabSize);
-			else if (c < 0x7f)
-				xOffset += charSize.x;
-			else
-			{
-				int j;
-				for (j = i+1; j < charIndex; j++)
-					if (s[j] < 0x7f)
-						break;
-				
-				tempContent.text = s.Substring(i, j-i);
-				xOffset += styles.normalStyle.CalcSize(tempContent).x;
-				i = j - 1;
-			}
-		}
-		return xOffset;
-	}
-	
-	public float GetCharAt(float x, float y, int line)
-	{
-		var text = textBuffer.lines[line];
-		var softLineBreaks = GetSoftLineBreaks(line);
-		var numSoftBreaks = softLineBreaks.Count;
-		int row = Mathf.Clamp((int) ((y - GetLineOffset(line)) / charSize.y), 0, numSoftBreaks);
-		var rowStart = row > 0 ? softLineBreaks[row - 1] : 0;
-		var rowEnd = row == numSoftBreaks ? text.Length : softLineBreaks[row];
-
-		var tabSize = SISettings.tabSize * charSize.x;
-		float xOffset = 0f, charWidth;
-		for (int i = rowStart; i < rowEnd; ++i)
-		{
-			var c = text[i];
-			if (c == '\t')
-				charWidth = tabSize - (xOffset % tabSize);
-			else if (c < 0x7f)
-				charWidth = charSize.x;
-			else
-			{
-				tempContent.text = text[i].ToString();
-				charWidth = styles.normalStyle.CalcSize(tempContent).x;
-			}
-			if (x <= charWidth)
-			{
-				return ((float)i) + (x / charWidth);
-			}
-			x -= charWidth;
-			xOffset += charWidth;
-		}
-		return rowEnd;
-	}
-	
 	public FGTextBuffer.CaretPos ViewToBufferPosition(int line, int row, int column)
 	{
 		if (line >= textBuffer.formatedLines.Length)
@@ -6901,8 +6716,6 @@ public class FGTextEditor
 	//	position.characterIndex = textBuffer.ColumnToCharIndex(ref position.column, line);
 		return position;
 	}
-	
-	//[MenuItem("Test/Unicode", )]
 
 	public FGTextBuffer.CaretPos GetLinesOffset(FGTextBuffer.CaretPos position, int linesDown)
 	{
@@ -7116,7 +6929,7 @@ public class FGTextEditor
 						keyword = "ref";
 						break;
 					}
-					//Debug.Log(token.parent.parent.RuleName);
+					Debug.Log(token.parent.parent.RuleName);
 					switch (token.parent.parent.RuleName)
 					{
 					case "namespaceMemberDeclaration":
@@ -7783,8 +7596,8 @@ public class FGTextEditor
 								rc.x += scrollViewRect.x - scrollPosition.x;
 								rc.y += 4f + scrollViewRect.y - scrollPosition.y;
 								var ssTopLeft = GUIUtility.ScreenToGUIPoint(new Vector2(rc.x, rc.y));
-								rc.x += ssTopLeft.x - rc.x;
-								rc.y += ssTopLeft.y - rc.y;
+								rc.x = ssTopLeft.x;
+								rc.y = ssTopLeft.y;
 								tokenMenu.DropDown(rc);
 								
 								caretMoveTime = frameTime;
@@ -8972,7 +8785,6 @@ public class FGTextEditor
 			tokenLeft.tokenKind != SyntaxToken.Kind.Comment &&
 			tokenLeft.tokenKind != SyntaxToken.Kind.CharLiteral &&
 			tokenLeft.tokenKind != SyntaxToken.Kind.StringLiteral &&
-			tokenLeft.tokenKind != SyntaxToken.Kind.InterpolatedStringFormatLiteral &&
 			tokenLeft.tokenKind != SyntaxToken.Kind.VerbatimStringBegin &&
 			tokenLeft.tokenKind != SyntaxToken.Kind.VerbatimStringLiteral)
 		{
@@ -8980,37 +8792,30 @@ public class FGTextEditor
 			{
 				autoTextAfter = TryAutoClose("}");
 			}
+			else if (typedChar == '[')
+			{
+				autoTextAfter = TryAutoClose("]");
+			}
+			else if (typedChar == '(')
+			{
+				autoTextAfter = TryAutoClose(")");
+			}
 			else if (typedChar == '"')
 			{
 				autoTextAfter = TryAutoClose("\"");
 			}
-			else if (tokenLeft == null ||
-				tokenLeft.tokenKind != SyntaxToken.Kind.InterpolatedStringWholeLiteral &&
-				tokenLeft.tokenKind != SyntaxToken.Kind.InterpolatedStringStartLiteral &&
-				tokenLeft.tokenKind != SyntaxToken.Kind.InterpolatedStringMidLiteral &&
-				tokenLeft.tokenKind != SyntaxToken.Kind.InterpolatedStringEndLiteral)
+			else if (typedChar == '<')
 			{
-				if (typedChar == '[')
+				if (tokenLeft != null && tokenLeft.parent != null)
 				{
-					autoTextAfter = TryAutoClose("]");
-				}
-				else if (typedChar == '(')
-				{
-					autoTextAfter = TryAutoClose(")");
-				}
-				else if (typedChar == '<')
-				{
-					if (tokenLeft != null && tokenLeft.parent != null)
+					var symbolLeft = tokenLeft.parent.resolvedSymbol;
+					if (symbolLeft != null)
 					{
-						var symbolLeft = tokenLeft.parent.resolvedSymbol;
-						if (symbolLeft != null)
+						if (symbolLeft is TypeDefinitionBase ||
+							symbolLeft.kind == SymbolKind.Method ||
+							symbolLeft.kind == SymbolKind.MethodGroup)
 						{
-							if (symbolLeft is TypeDefinitionBase ||
-								symbolLeft.kind == SymbolKind.Method ||
-								symbolLeft.kind == SymbolKind.MethodGroup)
-							{
-								autoTextAfter = TryAutoClose(">");
-							}
+							autoTextAfter = TryAutoClose(">");
 						}
 					}
 				}
@@ -9464,8 +9269,7 @@ public class FGTextEditor
 						currentArgumentIndex = (argumentsNode.childIndex + 1) / 2;
 					}
 					if (argumentsNode.RuleName == "lambdaExpressionBody" ||
-						argumentsNode.RuleName == "objectOrCollectionInitializer" ||
-						argumentsNode.RuleName == "stringInterpolation")
+						argumentsNode.RuleName == "objectOrCollectionInitializer")
 					{
 						argumentsNode = null;
 					}
@@ -9799,22 +9603,18 @@ public class FGTextEditor
 		AddRecentLocation(1, true);
 	}
 
-	static char[] spaceAndTab = {' ', '\t'};
-	
 	public void PingLine(int line)
 	{
 		CloseAllPopups();
 		
-		if (line == 0)
-			line = 1;
 		if (line > textBuffer.lines.Count)
 			line = textBuffer.lines.Count;
 		
 		int fnws = textBuffer.FirstNonWhitespace(line - 1);
 		int fromColumn = CharIndexToColumn(fnws, line - 1);
-		string expanded = textBuffer.lines[line - 1];
+		string expanded = FGTextBuffer.ExpandTabs(textBuffer.lines[line - 1], 0);
 		
-		pingContent.text = expanded.Trim(spaceAndTab);
+		pingContent.text = expanded.Trim();
 		if (!string.IsNullOrEmpty(pingContent.text))
 		{
 			int toColumn = expanded.Length;
@@ -9836,9 +9636,9 @@ public class FGTextEditor
 		pingTimer = 1f;
 		pingStartTime = frameTime;
 		pingColor = yellowPingColor;
-		scrollToRect.x = GetCharXOffset(fnws, caretPosition.line, 0);
+		scrollToRect.x = charSize.x * fromColumn;
 		scrollToRect.y = GetLineOffset(caretPosition.line);
-		scrollToRect.xMax = GetCharXOffset(fnws + pingContent.text.Length, caretPosition.line, 0);
+		scrollToRect.width = charSize.x * pingContent.text.Length;
 		scrollToRect.height = charSize.y;
 
 		caretMoveTime = frameTime;
@@ -11977,14 +11777,22 @@ public class FGTextEditor
 		};
 		caretMoveTime = frameTime;
 
-		Vector2 topLeft = BufferToViewPosition(selectionStartPosition);
-		scrollToRect = new Rect(
-			topLeft.x,
-			topLeft.y + GetLineOffset(selectionStartPosition.line),
-			GetTextWidth(selectionStartPosition.line, selectionStartPosition.characterIndex, toCharIndex, topLeft.x),
-			charSize.y);
-
+		int fromRow, fromColumn, toRow, toColumn;
 		int fromCharIndex = selectionStartPosition.characterIndex;
+		BufferToViewPosition(selectionStartPosition, out fromRow, out fromColumn);
+		BufferToViewPosition(caretPosition, out toRow, out toColumn);
+		if (fromRow != toRow)
+		{
+			fromColumn = 0;
+			var newFromCharIndex = GetSoftLineBreaks(caretPosition.line)[toRow - 1];
+			numChars -= newFromCharIndex - fromCharIndex;
+			fromCharIndex = newFromCharIndex;
+		}
+
+		scrollToRect.x = charSize.x * fromColumn;
+		scrollToRect.y = GetLineOffset(caretPosition.line) + charSize.y * toRow;
+		scrollToRect.xMax = charSize.x * toColumn;
+		scrollToRect.height = charSize.y;
 
 		pingTimer = 1f;
 		pingStartTime = frameTime;
@@ -12138,7 +11946,6 @@ public class FGTextEditor
 			stylesCode.hyperlinkStyle.fontSize = 0;
 			stylesCode.mailtoStyle.fontSize = 0;
 			stylesCode.keywordStyle.fontSize = 0;
-			stylesCode.controlKeywordStyle.fontSize = 0;
 			stylesCode.constantStyle.fontSize = 0;
 			stylesCode.referenceTypeStyle.fontSize = 0;
 			stylesCode.commentStyle.fontSize = 0;
@@ -12155,7 +11962,6 @@ public class FGTextEditor
 			stylesCode.hyperlinkStyle.fontStyle = 0;
 			stylesCode.mailtoStyle.fontStyle = 0;
 			stylesCode.keywordStyle.fontStyle = 0;
-			stylesCode.controlKeywordStyle.fontStyle = 0;
 			stylesCode.constantStyle.fontStyle = 0;
 			stylesCode.referenceTypeStyle.fontStyle = 0;
 			stylesCode.commentStyle.fontStyle = 0;
@@ -12173,7 +11979,6 @@ public class FGTextEditor
 			stylesText.hyperlinkStyle.fontSize = 0;
 			stylesText.mailtoStyle.fontSize = 0;
 			stylesText.keywordStyle.fontSize = 0;
-			stylesText.controlKeywordStyle.fontSize = 0;
 			stylesText.constantStyle.fontSize = 0;
 			stylesText.referenceTypeStyle.fontSize = 0;
 			stylesText.commentStyle.fontSize = 0;
@@ -12190,7 +11995,6 @@ public class FGTextEditor
 			stylesText.hyperlinkStyle.fontStyle = 0;
 			stylesText.mailtoStyle.fontStyle = 0;
 			stylesText.keywordStyle.fontStyle = 0;
-			stylesText.controlKeywordStyle.fontStyle = 0;
 			stylesText.constantStyle.fontStyle = 0;
 			stylesText.referenceTypeStyle.fontStyle = 0;
 			stylesText.commentStyle.fontStyle = 0;
