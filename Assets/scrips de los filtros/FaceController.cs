@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using System.Collections;
@@ -34,7 +34,11 @@ public class FaceController : MonoBehaviour
 
     private void Start()
     {
-        arface = GetComponent<ARFace>();
+	    arface = GetComponent<ARFace>();
+	    arFaceManager = GetComponent<ARFaceManager>();
+	    arFaceManager.facePrefab = Models[0];
+
+
     }
     public void ButtomSwapFaces()
     {
@@ -54,16 +58,18 @@ public class FaceController : MonoBehaviour
         if (buttom1 == true) { swapCounter = 2; SwapFaces(); }
     }
 
-    void Awake()
-    {
-        arFaceManager = GetComponent<ARFaceManager>();
+    //void Awake()
+    //{
+    //    arFaceManager = GetComponent<ARFaceManager>();
 
-        BUTTOM0.onClick.AddListener(ToggleTrackingFaces);        //buttom1.onClick.AddListener(SwapFaces);
-       // buttom2.onClick.AddListener(SwapFaces);
+    //    BUTTOM0.onClick.AddListener(ToggleTrackingFaces);        //buttom1.onClick.AddListener(SwapFaces);
+    //   // buttom2.onClick.AddListener(SwapFaces);
 
 
-        arFaceManager.facePrefab = Models[0];
-    }
+    //    arFaceManager.facePrefab = Models[0];
+    //}
+
+	
 
     public void SwapFaces()
     {

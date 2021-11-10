@@ -24,6 +24,11 @@ public class MoveBetweenPanels : MonoBehaviour
 		SceneManager.LoadScene(Scene);
 	}
 	
+	public void CloseScene(string Scene)
+	{
+		SceneManager.UnloadScene(Scene);
+	}
+	
 	public void AbrirLink(string Url)
 	{
 		Application.OpenURL("http://" + Url);

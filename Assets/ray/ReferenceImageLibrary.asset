@@ -16,12 +16,112 @@ MonoBehaviour:
   m_GuidHigh: 2130215595761715344
   m_Images:
   - m_SerializedGuid:
-      m_GuidLow: 5089071885222761238
-      m_GuidHigh: 3257418467980666266
+      m_GuidLow: 5140277488702822759
+      m_GuidHigh: 6094717173885427601
     m_SerializedTextureGuid:
-      m_GuidLow: 11881809434222698696
-      m_GuidHigh: 12234926213674926664
-    m_Size: {x: 0.1, y: 0.1}
+      m_GuidLow: 4662451761304618589
+      m_GuidHigh: 4715782882160220426
+    m_Size: {x: 0.096, y: 0.096}
     m_SpecifySize: 1
-    m_Name: qrr
-    m_Texture: {fileID: 2800000, guid: 57baa0c8aabaa4e4488235639130cba9, type: 3}
+    m_Name: 01objeCondatos
+    m_Texture: {fileID: 2800000, guid: 96f4c65d5b2c40b40a1907c98bd37141, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 5105230966634762730
+      m_GuidHigh: 188455003182954155
+    m_SerializedTextureGuid:
+      m_GuidLow: 18105659631347265186
+      m_GuidHigh: 4970358292392274970
+    m_Size: {x: 0.096, y: 0.096}
+    m_SpecifySize: 1
+    m_Name: 02objeCondatos
+    m_Texture: {fileID: 2800000, guid: be956ea23981fb441a6c75688842fa44, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 5379462312596095154
+      m_GuidHigh: 3761650501132372116
+    m_SerializedTextureGuid:
+      m_GuidLow: 13034561275296639192
+      m_GuidHigh: 5525988050008345595
+    m_Size: {x: 0.096, y: 0.096}
+    m_SpecifySize: 1
+    m_Name: 03AzulobjeCondatos
+    m_Texture: {fileID: 2800000, guid: 791e68d8106bb4e4fb0bcd81da40b04c, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 5229960401181007305
+      m_GuidHigh: 8630581555432883101
+    m_SerializedTextureGuid:
+      m_GuidLow: 442577025231320046
+      m_GuidHigh: 5650160837934724106
+    m_Size: {x: 0.096, y: 0.096}
+    m_SpecifySize: 1
+    m_Name: 04AzulNormalobjeCondatos
+    m_Texture: {fileID: 2800000, guid: a6a973ee597506240a34eca45867694e, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 5688431720266682931
+      m_GuidHigh: 15086660590059232439
+    m_SerializedTextureGuid:
+      m_GuidLow: 6319708102207359582
+      m_GuidHigh: 18086735766217498520
+    m_Size: {x: 0.096, y: 0.096}
+    m_SpecifySize: 1
+    m_Name: 05AmbarEscarabajo
+    m_Texture: {fileID: 2800000, guid: 243a4a5e1d0957b4981fbf0b5afe00fb, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 5381029227197263483
+      m_GuidHigh: 15638436867572749189
+    m_SerializedTextureGuid:
+      m_GuidLow: 113918667191492799
+      m_GuidHigh: 2248547603175608554
+    m_Size: {x: 0.096, y: 0.096}
+    m_SpecifySize: 1
+    m_Name: 06Ambar Flores
+    m_Texture: {fileID: 2800000, guid: 9b3c20bfb86c0194ea90d6bb2172341f, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 5746623820349034154
+      m_GuidHigh: 10612045998916684196
+    m_SerializedTextureGuid:
+      m_GuidLow: 9395692194174746296
+      m_GuidHigh: 13974988206304511561
+    m_Size: {x: 0.096, y: 0.096}
+    m_SpecifySize: 1
+    m_Name: 07Ambar Lagarto
+    m_Texture: {fileID: 2800000, guid: 24b23eb83445826449c60d21bb21f1c1, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 4834368777208732785
+      m_GuidHigh: 13754765676584120246
+    m_SerializedTextureGuid:
+      m_GuidLow: 6396505232174927701
+      m_GuidHigh: 2019836577052498985
+    m_Size: {x: 0.096, y: 0.096}
+    m_SpecifySize: 1
+    m_Name: 08Ambar Mantis
+    m_Texture: {fileID: 2800000, guid: 57b6cf55f39e58c4291c8e4faae6071c, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 5671905814906364946
+      m_GuidHigh: 8312671344429555902
+    m_SerializedTextureGuid:
+      m_GuidLow: 127242412307487700
+      m_GuidHigh: 11966642554476248185
+    m_Size: {x: 0.096, y: 0.096}
+    m_SpecifySize: 1
+    m_Name: 09Ambar Mosquito
+    m_Texture: {fileID: 2800000, guid: c1f39bd40e4c01c4793ca155000e12a6, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 5197817645175747641
+      m_GuidHigh: 1989674484395584643
+    m_SerializedTextureGuid:
+      m_GuidLow: 8886957832816795729
+      m_GuidHigh: 15981651049706750665
+    m_Size: {x: 0.096, y: 0.096}
+    m_SpecifySize: 1
+    m_Name: 10Ambar Musgo
+    m_Texture: {fileID: 2800000, guid: 56eba051d1107b54c902058ef43acadd, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 5301442918867163524
+      m_GuidHigh: 18188755725705734330
+    m_SerializedTextureGuid:
+      m_GuidLow: 5347093279477355459
+      m_GuidHigh: 451535007796445561
+    m_Size: {x: 0.096, y: 0.096}
+    m_SpecifySize: 1
+    m_Name: 11Ambar Pelos
+    m_Texture: {fileID: 2800000, guid: f02053c3b1014a3479415c7fb22c4406, type: 3}

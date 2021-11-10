@@ -2144,7 +2144,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 1125945752}
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
@@ -2300,6 +2300,7 @@ GameObject:
   - component: {fileID: 519015607}
   - component: {fileID: 519015608}
   - component: {fileID: 519015609}
+  - component: {fileID: 519015610}
   m_Layer: 5
   m_Name: Opcion
   m_TagString: Untagged
@@ -2394,10 +2395,48 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 637191336}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 519015610}
+        m_TargetAssemblyTypeName: MoveBetweenPanels, Assembly-CSharp
+        m_MethodName: OpenScene
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Ambar Infortation
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 2062745938}
+        m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
+        m_MethodName: Play
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Anim panel minijuegos abre
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &519015610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519015606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 501c2bafc4088804ca50e937043e3669, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  previousPanel: {fileID: 0}
+  nextPanel: {fileID: 0}
 --- !u!1 &528300160
 GameObject:
   m_ObjectHideFlags: 0
@@ -2729,7 +2768,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 1504677606}
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
@@ -3697,7 +3736,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 2069366857}
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
@@ -6965,7 +7004,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 1299824403}
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
@@ -9961,6 +10000,7 @@ GameObject:
   - component: {fileID: 2057353785}
   - component: {fileID: 2057353786}
   - component: {fileID: 2057353787}
+  - component: {fileID: 2057353788}
   m_Layer: 5
   m_Name: Opcion (8)
   m_TagString: Untagged
@@ -10055,10 +10095,36 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 1410763303}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2057353788}
+        m_TargetAssemblyTypeName: MoveBetweenPanels, Assembly-CSharp
+        m_MethodName: NextPanel
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &2057353788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2057353784}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 501c2bafc4088804ca50e937043e3669, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  previousPanel: {fileID: 772392462}
+  nextPanel: {fileID: 2062745934}
 --- !u!1 &2062745934
 GameObject:
   m_ObjectHideFlags: 0
@@ -10077,7 +10143,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2062745935
 RectTransform:
   m_ObjectHideFlags: 0
