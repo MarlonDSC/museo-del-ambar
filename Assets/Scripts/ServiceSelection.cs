@@ -34,6 +34,7 @@ public class ServiceSelection : MonoBehaviour
 			//reservationTypeName = GameObject.Find(gameObject.transform.GetChild(0).name).GetComponent<TextMeshProUGUI>().text;
 			Debug.Log(GameObject.Find(name).gameObject.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text);
 			reservationTypeName = GameObject.Find(name).gameObject.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text;
+			Debug.Log(reservationType);
 			//selector.GetComponent<Image>().color = new Color32(247,153,12,255);
 			Debug.Log(number);
         }
@@ -59,7 +60,7 @@ public class ServiceSelection : MonoBehaviour
 		
 		//"-" + uniqueID
 
-		DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93-10-27-2021");
+		DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93-11-10-2021");
 		//DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser.UserId + "-" + getDate);
 		//DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser + "-" + getDate);
 		Dictionary<string, object> reservation = new Dictionary<string, object>

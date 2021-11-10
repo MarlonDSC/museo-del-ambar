@@ -45,8 +45,9 @@ public class PaymentDetails : MonoBehaviour
 		//	//amount.text = amount.text + reservation.payment.amount.ToString();
 		//}
 		string getDate = DateTime.Now.ToString("MM-dd-yyyy");
-		DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser.UserId + "-" + getDate);
+		//DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser.UserId + "-" + getDate);
 		//DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93" + "-" + getDate);		
+		DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93-11-10-2021");		
 		DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
 		if (snapshot.Exists)
 		{

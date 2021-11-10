@@ -48,7 +48,7 @@ public class ChooseVisitDate : MonoBehaviour
 		double price = Convert.ToDouble((int.Parse(adults.GetComponent<TextMeshProUGUI>().text) + int.Parse(children.GetComponent<TextMeshProUGUI>().text)))*servicePrice;
 		
 		//DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser.UserId + "-" + getDate);
-		DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93-10-27-2021");
+		DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93-11-10-2021");
 		Dictionary<string, object> reservation = new Dictionary<string, object>
 		{
 			{"adults", int.Parse(adults.GetComponent<TextMeshProUGUI>().text)},

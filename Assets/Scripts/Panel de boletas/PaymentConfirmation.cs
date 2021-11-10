@@ -28,7 +28,8 @@ public class PaymentConfirmation : MonoBehaviour
 	
 	private async void GetReservation(){
 		string getDate = DateTime.Now.ToString("MM-dd-yyyy");
-		DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser.UserId + "-" + getDate);
+		//DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser.UserId + "-" + getDate);
+		DocumentReference docRef = database.Collection("reservations").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93-11-10-2021");
 		
 		DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
 		if (snapshot.Exists)
@@ -40,7 +41,8 @@ public class PaymentConfirmation : MonoBehaviour
 	}
 	
 	private async void GetUserName(){
-		DocumentReference docRef = database.Collection("users").Document(SignInWithGoogle.NewUser.UserId);
+		//DocumentReference docRef = database.Collection("users").Document(SignInWithGoogle.NewUser.UserId);
+		DocumentReference docRef = database.Collection("users").Document("5k9eMx6YwLcRJH9s8MwicqNMwi9");
 		
 		DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
 		if (snapshot.Exists)

@@ -33,7 +33,8 @@ public class PersonalDetails : MonoBehaviour
 	public async Task ListenDocument()
     {
 	    
-	    DocumentReference docRef = database.Collection("users").Document(SignInWithGoogle.NewUser.UserId);
+	    //DocumentReference docRef = database.Collection("users").Document(SignInWithGoogle.NewUser.UserId);
+	    DocumentReference docRef = database.Collection("users").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93");
 		
         DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
         if (snapshot.Exists)
@@ -49,8 +50,8 @@ public class PersonalDetails : MonoBehaviour
     }
     
 	public async void Continue(){
-		DocumentReference docRef = database.Collection("users").Document(SignInWithGoogle.NewUser.UserId);
-		//DocumentReference docRef = database.Collection("users").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93");
+		//DocumentReference docRef = database.Collection("users").Document(SignInWithGoogle.NewUser.UserId);
+		DocumentReference docRef = database.Collection("users").Document("5k9eMx6YwLcRJH9s8MwicqNMwi93");
 		//DocumentReference docRef = database.Collection("reservations").Document(SignInWithGoogle.NewUser + "-" + getDate);
 		Dictionary<string, object> user = new Dictionary<string, object>
 		{
