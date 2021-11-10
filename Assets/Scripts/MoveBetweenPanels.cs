@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MoveBetweenPanels : MonoBehaviour
 {
@@ -18,5 +19,14 @@ public class MoveBetweenPanels : MonoBehaviour
 		gameObject.SetActive(false);
 	}
 	
+	public void OpenScene(string Scene)
+	{
+		SceneManager.LoadScene(Scene);
+	}
+	
+	public void AbrirLink(string Url)
+	{
+		Application.OpenURL("http://" + Url);
+	}
 
 }
