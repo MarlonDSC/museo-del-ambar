@@ -1,0 +1,11 @@
+41119967ef24475591dfe97bfac89454|C:\Users\AVR 8\Documents\GitHub\museo-del-ambar\Assets\ray\qrTexturas\01objeCondatos.png|0.096
+f696d1ea6c8346d9ab76ddb0d3869d02|C:\Users\AVR 8\Documents\GitHub\museo-del-ambar\Assets\ray\qrTexturas\02objeCondatos.png|0.096
+c0e440b2b0784aa794482a6133113434|C:\Users\AVR 8\Documents\GitHub\museo-del-ambar\Assets\ray\qrTexturas\03AzulobjeCondatos.png|0.096
+7dc0ddc98d4648949d839da832fcc577|C:\Users\AVR 8\Documents\GitHub\museo-del-ambar\Assets\ray\qrTexturas\04AzulNormalobjeCondatos.png|0.096
+cf8f52335e824ef1b79c5dc5df955ed1|C:\Users\AVR 8\Documents\GitHub\museo-del-ambar\Assets\ray\qrTexturas\05AmbarEscarabajo.png|0.096
+7d166e7b41924aad85d30b9e79e306d9|C:\Users\AVR 8\Documents\GitHub\museo-del-ambar\Assets\ray\qrTexturas\06Ambar Flores.png|0.096
+edb3ceaa1bea4fc0a4c988699c8f4593|C:\Users\AVR 8\Documents\GitHub\museo-del-ambar\Assets\ray\qrTexturas\07Ambar Lagarto.png|0.096
+0ec41c7120ca4317b62f88c981bee2be|C:\Users\AVR 8\Documents\GitHub\museo-del-ambar\Assets\ray\qrTexturas\08Ambar Mantis.png|0.096
+a0f76412a8494eb6bee04a9b8b8a5c73|C:\Users\AVR 8\Documents\GitHub\museo-del-ambar\Assets\ray\qrTexturas\09Ambar Mosquito.png|0.096
+ebf534395b9b482283ac0edd66be9c1b|C:\Users\AVR 8\Documents\GitHub\museo-del-ambar\Assets\ray\qrTexturas\10Ambar Musgo.png|0.096
+18165984823f4992bae80ae1f6706bfc|C:\Users\AVR 8\Documents\GitHub\museo-del-ambar\Assets\ray\qrTexturas\11Ambar Pelos.png|0.096

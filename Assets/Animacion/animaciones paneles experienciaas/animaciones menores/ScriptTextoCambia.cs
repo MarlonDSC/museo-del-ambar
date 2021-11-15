@@ -4,32 +4,26 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Sprites;
-public class TextoCambia : MonoBehaviour
+
+public class ScriptTextoCambia : MonoBehaviour
 {
 	//textos
 	public TextMeshProUGUI título;
 	public TextMeshProUGUI info;
-	public TextMeshProUGUI tituloImagenes;
 	//Botones 
 	public GameObject btnTabaco;
 	public GameObject btnLinterna;
 	public GameObject btnVr;
-	public GameObject btnJuegos;
+	public GameObject btnAmbar;
 	public GameObject btnCigarro;
 	public GameObject btnCafe;
 	// Rawimages
-	public Image ImagenRecuadro1;
-	public Image ImagenDelVr1;
-	//Texturas de las imagnes
-	public Sprite Tabao1;
-	public Sprite VR1;
-	
 
 	
-    // Start is called before the first frame update
+	// Start is called before the first frame update
     void Start()
     {
-	   
+        
     }
 
     // Update is called once per frame
@@ -37,16 +31,14 @@ public class TextoCambia : MonoBehaviour
     {
         
     }
-    
 	public void CambioTextoTabacoYLaImagen()
 	{
 		if(btnTabaco == true)
 		{
 			título.text = "TABACO";
 			info.text = "Experiecia del tabaco junto con su historia y como ha ido evolucionando";
-			tituloImagenes.text  = "";
+		
 			
-			ImagenRecuadro1.sprite = Tabao1;
 		}
 	
 	}
@@ -54,10 +46,9 @@ public class TextoCambia : MonoBehaviour
 	public void CambioDeTextoVRYlaImagen()
 	{
 		título.text = "VR";
-		info.text = "Experiecia del VR junto con su historia y como ha ido evolucionando";
-		tituloImagenes.text  = "";
+		info.text = "Experiecia en realidad virtual dentro del museo y asi poder sentirse como minero dentro de ella";
+
 		
-		ImagenRecuadro1.sprite = VR1;
 	}
 	
 	
@@ -65,9 +56,9 @@ public class TextoCambia : MonoBehaviour
 	{
 		if(btnLinterna == true)
 		{
-			título.text = "OBSERVACION DEL AMBAR";
-			info.text = "Experiecia de observacion del ambar  junto con su historia y como ha ido evolucionando";
-			tituloImagenes.text  = "";
+			título.text = "LINTERNA";
+			info.text = "Experiecia de observacion del ambar junto con su historia y como ha ido evolucionando";
+		
 			
 		
 		}
@@ -80,20 +71,19 @@ public class TextoCambia : MonoBehaviour
 		{
 			título.text = "MARIDAJE";
 			info.text = "Experiecia del Maridaje junto con su historia y como ha ido evolucionando";
-			tituloImagenes.text  = "";
+		
 			
 		}
 	
 	}
-	public void CambioTextoJuegosYLaImagen()
+	public void CambioTextoAmbarYLaImagen()
 	{
-		if(btnJuegos == true)
+		if(btnAmbar == true)
 		{
-			título.text = "MiniJuegos";
-			info.text = "Experiecia de los minijuegos junto con ambarito ";
-			tituloImagenes.text  = "";
-			
-			ImagenRecuadro1.sprite = Tabao1;
+			título.text = "Ambar";
+			info.text = "Experiecia del ambar junto con su historia y como ha ido evolucionando ";
+		
+		
 		}
 	
 	}
@@ -102,11 +92,11 @@ public class TextoCambia : MonoBehaviour
 		if(btnCafe == true)
 		{
 			título.text = "Cafeteria";
-			info.text = "Experiecia del Cafeteria junto con su historia y como ha ido evolucionando";
-			tituloImagenes.text  = "";
+			info.text = "Experiecia de la Cafeteria donde se podra recrear de todo lo vivido dentro del museo ";
 			
-			ImagenRecuadro1.sprite = Tabao1;
 		}
 	
 	}
+    
+    
 }
